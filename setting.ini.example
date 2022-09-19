@@ -1,0 +1,4 @@
+yt_dlp_path = "C:\example\yt-dlp.exe"
+download_path = "C:\example\"
+database_name = "database/youtube.db"
+api_key = 'api_key'
