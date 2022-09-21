@@ -26,3 +26,4 @@ This software checks and records if youtuber streaming.
 
 ## Usage
 Run command: `php main.php channelId`
+Use cron or task scheduler.
