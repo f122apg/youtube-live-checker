@@ -21,7 +21,7 @@ This software checks and records if youtuber streaming.
     * MP4 file into download_path.
   * database_name
     * Database path. Changing the value is not recommended.
-  * api_key = 'api_key'
+  * api_key
     * Youtube Data API APIKey.
 
 ## Usage
