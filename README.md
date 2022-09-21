@@ -1,7 +1,7 @@
 # youtube-live-checker
 Never miss out  your favorite Youtuber streaming.
 
-This software checks if youtuber streaming and records it.
+This software checks and records if youtuber streaming.
 
 ## Requirement
 * [yt-dlp](https://github.com/yt-dlp/yt-dlp)
