@@ -1,15 +1,28 @@
 # youtube-live-checker
-## requirement
+Never miss out  your favorite Youtuber streaming.
+
+This software checks if youtuber streaming and records it.
+
+## Requirement
 * [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 * PHP 8.1
 * PHP extensions: SQLite3
 * Youtube Data API API Key
+* Windows OS or Linux OS(Not tested)
 
-## installation
-1. download source zip
-2. extract zip
-3. rename `setting.ini.example` to `setting.ini`
-4. change setting in `setting.ini`
+## Installation
+1. Download source zip
+2. Extract zip
+3. Rename `setting.ini.example` to `setting.ini`
+4. Change setting in `setting.ini`
+  * yt_dlp_path
+    * Please input yt-dlp path. 
+  * download_path
+    * MP4 file into download_path.
+  * database_name
+    * Database path. Changing the value is not recommended.
+  * api_key = 'api_key'
+    * Youtube Data API APIKey.
 
-## usage
-run command: `php main.php channelId`
+## Usage
+Run command: `php main.php channelId`
