@@ -25,5 +25,6 @@ This software checks and records if youtuber streaming.
         * Youtube Data API APIKey.
 
 ## Usage
-Run command: `php main.php channelId`
+Run command: `php src/Main.php channelId`
+  
 Use cron or task scheduler.
