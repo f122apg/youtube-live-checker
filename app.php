@@ -1,14 +1,16 @@
 <?php
-require_once 'youtube_http.php';
-require_once 'youtube_feed_parser.php';
-require_once 'database.php';
+namespace f122apg\App;
+
+use f122apg\App\Database\Database;
+use f122apg\App\Youtube\YoutubeFeedParser;
+use f122apg\App\Youtube\YoutubeHttp;
 
 class App {
     private const _YT_DLP_COMMAND = '%s --live-from-start https://www.youtube.com/watch?v=%s';
     public const INI_FILE = 'setting.ini';
 
     public static function liveCheck(string $channelId) {
-        echo 'live check start:' . (new DateTime())->format('Y/m/d H:i:s') . "\n";
+        echo 'live check start:' . (new \DateTime())->format('Y/m/d H:i:s') . "\n";
 
         $ini = parse_ini_file(self::INI_FILE);
 
@@ -33,7 +35,7 @@ class App {
             echo 'found new ContentID:' .  $entry->contentId . "\n";
 
             if ($entry->isNowLive()) {
-                echo 'rec starting... StartTime:' . (new DateTime())->format('Y/m/d H:i:s') . ' Channel: ' . $entry->channelName . ' ID:' . $entry->contentId . "\n";
+                echo 'rec starting... StartTime:' . (new \DateTime())->format('Y/m/d H:i:s') . ' Channel: ' . $entry->channelName . ' ID:' . $entry->contentId . "\n";
                 self::_startDownload($entry->contentId);
             } else {
                 echo 'this id is not a live.' . "\n";

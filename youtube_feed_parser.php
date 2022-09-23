@@ -1,5 +1,7 @@
 <?php
-require_once 'youtube_entry.php';
+namespace f122apg\App\Youtube;
+
+use f122apg\App\Youtube\YoutubeEntry;
 
 class YoutubeFeedParser {
     public array $entries;
@@ -14,7 +16,7 @@ class YoutubeFeedParser {
                 $entry->children('yt', 'videoId'),
                 $entry->title,
                 'unknown',
-                new DateTime($entry->published)
+                new \DateTime($entry->published)
             );
         }
     }

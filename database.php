@@ -1,12 +1,14 @@
 <?php
-require_once 'youtube_entry.php';
+namespace f122apg\App\Database;
+
+use f122apg\App\Youtube\YoutubeEntry;
 
 class Database {
-    private readonly SQLite3 $conn;
+    private readonly \SQLite3 $conn;
     private const _INIT_SQL = 'database/init.sql';
 
     public function __construct($dbName) {
-        $this->conn = new SQLite3($dbName);
+        $this->conn = new \SQLite3($dbName);
 
         if (file_exists($dbName) && filesize($dbName) === 0) {
             $this->_init();
@@ -38,7 +40,7 @@ class Database {
     }
 
     public function insertYoutubeEntry(YoutubeEntry $entry) {
-        $sql = 'INSERT INTO feed(channel_id, channel_name, content_id, content_type, publish_date, check_date) VALUES(\'' . $entry->channelId . '\', \'' . $entry->channelName . '\', \'' . $entry->contentId . '\', \'' . $entry->contentType . '\', \'' . $entry->publishDate->format('Y/m/d H:i:s') . '\', \'' . (new DateTime())->format('Y/m/d H:i:s') . '\')';
+        $sql = 'INSERT INTO feed(channel_id, channel_name, content_id, content_type, publish_date, check_date) VALUES(\'' . $entry->channelId . '\', \'' . $entry->channelName . '\', \'' . $entry->contentId . '\', \'' . $entry->contentType . '\', \'' . $entry->publishDate->format('Y/m/d H:i:s') . '\', \'' . (new \DateTime())->format('Y/m/d H:i:s') . '\')';
         $this->_exec($sql);
     }
 
@@ -46,7 +48,7 @@ class Database {
         $this->conn->exec($query);
     }
 
-    private function _query($query): SQLite3Result {
+    private function _query($query): \SQLite3Result {
         return $this->conn->query($query);
     }
 }

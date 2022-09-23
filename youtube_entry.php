@@ -1,4 +1,5 @@
 <?php
+namespace f122apg\App\Youtube;
 
 class YoutubeEntry {
     public string $contentType;
@@ -6,7 +7,7 @@ class YoutubeEntry {
     public function __construct(
         public string $channelId, public string $channelName,
         public string $contentId, public string $title,
-        public string $liveStatus, public DateTime $publishDate,
+        public string $liveStatus, public \DateTime $publishDate,
     ) {
         $this->contentType = $liveStatus === 'live' || $liveStatus === 'upcoming'
             ? 'live'

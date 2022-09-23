@@ -1,6 +1,8 @@
 <?php
-require_once 'app.php';
-require_once 'youtube_entry.php';
+namespace f122apg\App\Youtube;
+
+use f122apg\App\App;
+use f122apg\App\Youtube\YoutubeEntry;
 
 class YoutubeHttp {
     private const _YOUTUBE_FEED_XML = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s';
@@ -18,7 +20,7 @@ class YoutubeHttp {
         $statusCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 
         if ($statusCode != 200) {
-            throw new RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
+            throw new \RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
         }
 
         return $response;
@@ -37,7 +39,7 @@ class YoutubeHttp {
         $statusCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 
         if ($statusCode != 200) {
-            throw new RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
+            throw new \RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
         }
 
         $json = json_decode($response);
@@ -48,7 +50,7 @@ class YoutubeHttp {
             $json->items[0]->id,
             $json->items[0]->snippet->title,
             $json->items[0]->snippet->liveBroadcastContent,
-            new DateTime($json->items[0]->snippet->publishedAt)
+            new \DateTime($json->items[0]->snippet->publishedAt)
         );
     }
 }
