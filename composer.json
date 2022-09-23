@@ -1,0 +1,17 @@
+{
+    "name": "f122apg/youtube-live-checker",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "F122apg\\YoutubeLiveChecker\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "f122apg",
+            "email": "f122apg@gmail.com"
+        }
+    ],
+    "require": {}
+}
