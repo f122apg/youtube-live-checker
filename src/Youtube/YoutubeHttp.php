@@ -27,8 +27,8 @@ class YoutubeHttp {
     }
 
     public static function getVideoInfo(string $contentId) {
-        $ini = parse_ini_file(App::INI_FILE);
-        $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, $ini['api_key']);
+        $config = App::getConfig();
+        $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, $config['api_key']);
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);

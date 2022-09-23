@@ -7,15 +7,19 @@ use F122apg\YoutubeLiveChecker\Youtube\YoutubeHttp;
 
 class App {
     private const _YT_DLP_COMMAND = '%s --live-from-start https://www.youtube.com/watch?v=%s';
-    public const INI_FILE = 'setting.ini';
+    private const _INI_FILE = 'setting.ini';
+
+    public static function getConfig() {
+        return parse_ini_file(__DIR__ . '/../' . self::_INI_FILE);
+    }
 
     public static function liveCheck(string $channelId) {
         echo 'live check start:' . (new \DateTime())->format('Y/m/d H:i:s') . "\n";
 
-        $ini = parse_ini_file(self::INI_FILE);
+        $config = self::getConfig();
 
         // データベースへの接続
-        $db = new Database($ini['database_name']);
+        $db = new Database($config['database_name']);
 
         // RSSフィードの取得
         $xmlStr = YoutubeHttp::getFeedXml($channelId);
@@ -46,10 +50,10 @@ class App {
     }
 
     private static function _startDownload(string $contentId) {
-        $ini = parse_ini_file(self::INI_FILE);
+        $config = self::getConfig();
 
-        chdir($ini['download_path']);
-        $command = sprintf(self::_YT_DLP_COMMAND, $ini['yt_dlp_path'], $contentId);
+        chdir($config['download_path']);
+        $command = sprintf(self::_YT_DLP_COMMAND, $config['yt_dlp_path'], $contentId);
 
         //Windowsの場合はpopen関数で非同期実行
         if (strpos(PHP_OS, 'WIN')!==false) {
