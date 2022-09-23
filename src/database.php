@@ -1,5 +1,5 @@
 <?php
-namespace F122apg\YoutubeLiveChecker\Database;
+namespace F122apg\YoutubeLiveChecker;
 
 use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
 

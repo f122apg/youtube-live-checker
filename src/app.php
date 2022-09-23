@@ -1,7 +1,7 @@
 <?php
 namespace F122apg\YoutubeLiveChecker;
 
-use F122apg\YoutubeLiveChecker\Database\Database;
+use F122apg\YoutubeLiveChecker\Database;
 use F122apg\YoutubeLiveChecker\Youtube\YoutubeFeedParser;
 use F122apg\YoutubeLiveChecker\Youtube\YoutubeHttp;
 

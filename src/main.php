@@ -1,7 +1,7 @@
 <?php
 namespace F122apg\YoutubeLiveChecker;
 
-require_once 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use F122apg\YoutubeLiveChecker\App;
 
