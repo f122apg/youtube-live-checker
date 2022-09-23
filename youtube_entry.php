@@ -1,5 +1,5 @@
 <?php
-namespace f122apg\App\Youtube;
+namespace F122apg\YoutubeLiveChecker\Youtube;
 
 class YoutubeEntry {
     public string $contentType;

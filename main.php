@@ -1,4 +1,4 @@
 <?php
-namespace f122apg\App;
+namespace F122apg\YoutubeLiveChecker;
 
 App::liveCheck($argv[1]);

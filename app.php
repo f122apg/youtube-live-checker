@@ -1,9 +1,9 @@
 <?php
-namespace f122apg\App;
+namespace F122apg\YoutubeLiveChecker;
 
-use f122apg\App\Database\Database;
-use f122apg\App\Youtube\YoutubeFeedParser;
-use f122apg\App\Youtube\YoutubeHttp;
+use F122apg\YoutubeLiveChecker\Database\Database;
+use F122apg\YoutubeLiveChecker\Youtube\YoutubeFeedParser;
+use F122apg\YoutubeLiveChecker\Youtube\YoutubeHttp;
 
 class App {
     private const _YT_DLP_COMMAND = '%s --live-from-start https://www.youtube.com/watch?v=%s';

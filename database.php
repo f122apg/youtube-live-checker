@@ -1,7 +1,7 @@
 <?php
-namespace f122apg\App\Database;
+namespace F122apg\YoutubeLiveChecker\Database;
 
-use f122apg\App\Youtube\YoutubeEntry;
+use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
 
 class Database {
     private readonly \SQLite3 $conn;

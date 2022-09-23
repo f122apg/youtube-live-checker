@@ -1,8 +1,8 @@
 <?php
-namespace f122apg\App\Youtube;
+namespace F122apg\YoutubeLiveChecker\Youtube;
 
-use f122apg\App\App;
-use f122apg\App\Youtube\YoutubeEntry;
+use F122apg\YoutubeLiveChecker\App;
+use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
 
 class YoutubeHttp {
     private const _YOUTUBE_FEED_XML = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s';

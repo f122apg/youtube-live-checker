@@ -1,7 +1,7 @@
 <?php
-namespace f122apg\App\Youtube;
+namespace F122apg\YoutubeLiveChecker\Youtube;
 
-use f122apg\App\Youtube\YoutubeEntry;
+use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
 
 class YoutubeFeedParser {
     public array $entries;
