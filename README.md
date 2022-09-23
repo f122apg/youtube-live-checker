@@ -15,14 +15,14 @@ This software checks and records if youtuber streaming.
 2. Extract zip
 3. Rename `setting.ini.example` to `setting.ini`
 4. Change setting in `setting.ini`
-  * yt_dlp_path
-    * Please input yt-dlp path. 
-  * download_path
-    * MP4 file into download_path.
-  * database_name
-    * Database path. Changing the value is not recommended.
-  * api_key
-    * Youtube Data API APIKey.
+      * yt_dlp_path
+        * Please input yt-dlp path. 
+      * download_path
+        * MP4 file into download_path.
+      * database_name
+        * Database path. Changing the value is not recommended.
+      * api_key
+        * Youtube Data API APIKey.
 
 ## Usage
 Run command: `php main.php channelId`
