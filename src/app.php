@@ -1,69 +1,56 @@
 <?php
 namespace F122apg\YoutubeLiveChecker;
 
-use F122apg\YoutubeLiveChecker\Database;
-use F122apg\YoutubeLiveChecker\Youtube\YoutubeFeedParser;
-use F122apg\YoutubeLiveChecker\Youtube\YoutubeHttp;
+use F122apg\YoutubeLiveChecker\Log;
+use F122apg\YoutubeLiveChecker\GCP\Firestore;
+use F122apg\YoutubeLiveChecker\Youtube\RSSParser;
+use F122apg\YoutubeLiveChecker\Youtube\Http;
 
 class App {
-    private const _YT_DLP_COMMAND = '%s --live-from-start https://www.youtube.com/watch?v=%s';
-    private const _INI_FILE = 'setting.ini';
+    private const _YT_DLP_COMMAND = 'yt-dlp -P %s --live-from-start https://www.youtube.com/watch?v=%s';
+    private const _ENV_DOWNLOAD_PATH = 'DOWNLOAD_PATH';
 
-    public static function getConfig() {
-        return parse_ini_file(__DIR__ . '/../' . self::_INI_FILE);
-    }
-
-    public static function liveCheck(string $channelId) {
-        echo 'live check start:' . (new \DateTime())->format('Y/m/d H:i:s') . "\n";
-
-        $config = self::getConfig();
-
-        // データベースへの接続
-        $db = new Database($config['database_name']);
+    public static function checkNowLive(string $channelId) {
+        Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
 
         // RSSフィードの取得
-        $xmlStr = YoutubeHttp::getFeedXml($channelId);
-        $parser = new YoutubeFeedParser($xmlStr);
+        $xmlStr = Http::getRSSXml($channelId);
+        $parser = new RSSParser($xmlStr);
         // RSSフィードから取得したContentIdを抽出
         $feedContentIds = $parser->getContentIds();
 
+        $firestore = new Firestore();
         // DBに登録されていないContentIdを抽出（新しい動画として認識する）
-        $newContentIds = $db->getNewContentIds($feedContentIds);
+        $newContentIds = $firestore->getNewContentIds($feedContentIds);
 
         foreach ($newContentIds as $contentId) {
-            $entry = YoutubeHttp::getVideoInfo($contentId);
-            if ($entry->isSaveRecord()) {
-                $db->insertYoutubeEntry($entry);
+            $entry = Http::getVideoInfo($contentId);
+            if ($entry->isSaveItem()) {
+                $firestore->addDocument($entry->toFeedDocument());
             }
 
-            echo 'found new ContentID:' .  $entry->contentId . "\n";
+            Log::info('Found new ContentID:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
 
             if ($entry->isNowLive()) {
-                echo 'rec starting... StartTime:' . (new \DateTime())->format('Y/m/d H:i:s') . ' Channel: ' . $entry->channelName . ' ID:' . $entry->contentId . "\n";
+                Log::info(
+                    'Rec starting... StartTime:' .
+                    (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM) .
+                    ' Channel: ' . $entry->channelName .
+                    ' ID:' . $entry->contentId
+                );
+
                 self::_startDownload($entry->contentId);
             } else {
-                echo 'this id is not a live.' . "\n";
+                Log::info('This id is not a live.');
             }
         }
 
-        echo 'live check end' . "\n";
+        Log::info('Live check end');
     }
 
     private static function _startDownload(string $contentId) {
-        $config = self::getConfig();
-
-        chdir($config['download_path']);
-        $command = sprintf(self::_YT_DLP_COMMAND, $config['yt_dlp_path'], $contentId);
-
-        //Windowsの場合はpopen関数で非同期実行
-        if (strpos(PHP_OS, 'WIN')!==false) {
-            $winCommand = 'start powershell -Command ' . $command;
-            $fp = popen($winCommand, 'r');
-            pclose($fp);
-        //Linuxの場合はexec関数で非同期実行
-        } else {
-            $linuxCommand = $command . ' > /dev/null &';
-            exec($linuxCommand);
-        }
+        $baseCommand = sprintf(self::_YT_DLP_COMMAND, getenv(self::_ENV_DOWNLOAD_PATH), $contentId);
+        $linuxCommand = $baseCommand . ' > /dev/null &';
+        exec($linuxCommand);
     }
 }

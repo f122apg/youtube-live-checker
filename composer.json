@@ -1,6 +1,6 @@
 {
     "name": "f122apg/youtube-live-checker",
-    "type": "library",
+    "type": "project",
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -13,5 +13,11 @@
             "email": "f122apg@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "google/cloud-functions-framework": "^1.1",
+        "grpc/grpc": "1.42",
+        "google/protobuf": "^3.21",
+        "google/cloud-firestore": "^1.25",
+        "ramsey/uuid": "^4.5"
+    }
 }

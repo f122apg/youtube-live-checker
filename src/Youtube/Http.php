@@ -1,14 +1,14 @@
 <?php
 namespace F122apg\YoutubeLiveChecker\Youtube;
 
-use F122apg\YoutubeLiveChecker\App;
-use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
+use F122apg\YoutubeLiveChecker\Youtube\RSSEntry;
 
-class YoutubeHttp {
+class Http {
     private const _YOUTUBE_FEED_XML = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s';
     private const _YOUTUBE_API_VIDEO = 'https://content-youtube.googleapis.com/youtube/v3/videos?id=%s&key=%s&part=snippet';
+    private const _ENV_YOUTUBE_API_KEY = 'YOUTUBE_API_KEY';
 
-    public static function getFeedXml(string $channelId): string {
+    public static function getRSSXml(string $channelId): string {
         $url = sprintf(self::_YOUTUBE_FEED_XML, $channelId);
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
@@ -20,15 +20,16 @@ class YoutubeHttp {
         $statusCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 
         if ($statusCode != 200) {
-            throw new \RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
+            throw new \RuntimeException(
+                'HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl)
+            );
         }
 
         return $response;
     }
 
     public static function getVideoInfo(string $contentId) {
-        $config = App::getConfig();
-        $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, $config['api_key']);
+        $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, getenv(self::_ENV_YOUTUBE_API_KEY));
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -39,12 +40,14 @@ class YoutubeHttp {
         $statusCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 
         if ($statusCode != 200) {
-            throw new \RuntimeException('HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl));
+            throw new \RuntimeException(
+                'HTTP ERROR! URL:' . $url . ' StatusCode:' . $statusCode . ' Response:' . $response . ' err:' . curl_error($curl)
+            );
         }
 
         $json = json_decode($response);
 
-        return new YoutubeEntry(
+        return new RSSEntry(
             $json->items[0]->snippet->channelId,
             $json->items[0]->snippet->channelTitle,
             $json->items[0]->id,

@@ -1,16 +1,16 @@
 <?php
 namespace F122apg\YoutubeLiveChecker\Youtube;
 
-use F122apg\YoutubeLiveChecker\Youtube\YoutubeEntry;
+use F122apg\YoutubeLiveChecker\Youtube\RSSEntry;
 
-class YoutubeFeedParser {
+class RSSParser {
     public array $entries;
 
     public function __construct(string $xmlStr) {
         $xml = simplexml_load_string($xmlStr);
 
         foreach ($xml->entry as $entry) {
-            $this->entries[] = new YoutubeEntry(
+            $this->entries[] = new RSSEntry(
                 $xml->children('yt', 'channelId'),
                 $xml->title,
                 $entry->children('yt', 'videoId'),
@@ -21,7 +21,12 @@ class YoutubeFeedParser {
         }
     }
 
-    public function getContentIds():array {
+    /**
+     * EntryからContentIDを取得する
+     *
+     * @return array
+     */
+    public function getContentIds(): array {
         return array_map(function($entry) {
             return $entry->contentId;
         }, $this->entries);
