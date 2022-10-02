@@ -41,7 +41,7 @@ class App {
                 $firestore->addDocument($entry->toFeedDocument());
             }
 
-            Log::info('Found new ContentID:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
+            Log::info('Found new ContentID:' . $entry->contentId);
 
             if ($entry->isNowLive()) {
                 Log::info(
