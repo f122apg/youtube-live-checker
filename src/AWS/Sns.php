@@ -78,7 +78,7 @@ class Sns {
      * @return string
      */
     private function _createSubject(string $title): string {
-        return "[YoutubeLiveChecker] $$title の録画を開始しました";
+        return "[YoutubeLiveChecker] $title の録画を開始しました";
     }
 
     /**
