@@ -36,7 +36,6 @@ class Firestore {
      */
     public function addDocument(FeedDocument $feedDocument) {
         $doc = $this->_getCollection()
-            ->collection(self::_COLLECTION_NAME)
             ->document(Uuid::uuid4()->toString());
 
         $doc->set($feedDocument->getArrayObject());
