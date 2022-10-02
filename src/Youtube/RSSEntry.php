@@ -24,7 +24,7 @@ class RSSEntry {
      * @param string $contentId コンテンツID
      * @param string $contentTitle 動画タイトル
      * @param string $contentType コンテンツタイプ
-     * @param string $publishDate 動画/配信の公開日時
+     * @param \DateTime $publishDate 動画/配信の公開日時
      * @return void
      */
     public function __construct(
@@ -74,7 +74,7 @@ class RSSEntry {
             $this->contentTitle,
             $this->contentType,
             $this->publishDate,
-            (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM)
+            new \DateTime('now', new \DateTimeZone('UTC'))
         );
     }
 }
