@@ -24,7 +24,11 @@ class Workflows {
         $client = new ExecutionsClient();
 
         try {
-            $formattedParent = $client->workflowName(App::ENV_PROJECT_ID, App::ENV_REGION, self::ENV_WORKFLOW_NAME);
+            $formattedParent = $client->workflowName(
+                getenv(App::ENV_PROJECT_ID),
+                getenv(App::ENV_REGION),
+                getenv(self::ENV_WORKFLOW_NAME)
+            );
             $execution = new Execution([
                 'argument' => json_encode([
                     'title' => $title,
