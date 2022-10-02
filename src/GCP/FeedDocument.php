@@ -32,6 +32,14 @@ class FeedDocument {
      * @return array
      */
     public function getArrayObject() {
-        return json_decode(json_encode($this), true);
+        return json_decode(json_encode([
+            'channelId' => $this->channelId,
+            'channelName' => $this->channelName,
+            'contentId' => $this->contentId,
+            'contentTitle' => $this->contentTitle,
+            'contentType' => $this->contentType->value,
+            'publishDate' => $this->publishDate->format(\DateTime::ATOM),
+            'checkedDate' => $this->checkedDate->format(\DateTime::ATOM)
+        ]), true);
     }
 }
