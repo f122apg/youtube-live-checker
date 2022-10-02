@@ -4,6 +4,7 @@ namespace F122apg\YoutubeLiveChecker\GCP;
 use Google\Cloud\Firestore\FirestoreClient;
 use Ramsey\Uuid\Uuid;
 
+use F122apg\YoutubeLiveChecker\App;
 use F122apg\YoutubeLiveChecker\GCP\FeedDocument;
 
 class Firestore {
@@ -21,16 +22,9 @@ class Firestore {
      */
     private const _COLLECTION_NAME = 'feed';
 
-    /**
-     * GCPのプロジェクトIDを定義したランタイム環境変数
-     *
-     * @var string
-     */
-    private const _ENV_PROJECT_ID = 'PROJECT_ID';
-
     public function __construct() {
         $this->_client = new FirestoreClient([
-            'projectId' => getenv(self::_ENV_PROJECT_ID),
+            'projectId' => getenv(App::ENV_PROJECT_ID),
         ]);
     }
 

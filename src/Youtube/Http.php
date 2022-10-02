@@ -28,7 +28,7 @@ class Http {
         return $response;
     }
 
-    public static function getVideoInfo(string $contentId) {
+    public static function getVideoInfo(string $contentId): RSSEntry {
         $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, getenv(self::_ENV_YOUTUBE_API_KEY));
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');

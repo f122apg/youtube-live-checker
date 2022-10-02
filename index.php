@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 
 use F122apg\YoutubeLiveChecker\App;
+use F122apg\YoutubeLiveChecker\AWS\Sns;
 
 FunctionsFramework::http('checkLive', 'checkLive');
 
@@ -21,6 +22,9 @@ function checkLive(ServerRequestInterface $request): ResponseInterface
         return (new Response())
             ->withStatus(200)
             ->withBody(Utils::streamFor('success'));
+    } elseif (!empty($queries) && isset($queries['notify']) && $queries['notify']) {
+        $sns = new Sns($queries['title'], $queries['contentId']);
+        $sns->publish();
     }
 
     return (new Response())
