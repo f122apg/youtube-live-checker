@@ -25,6 +25,10 @@ function checkLive(ServerRequestInterface $request): ResponseInterface
     } elseif (!empty($queries) && isset($queries['notify']) && $queries['notify']) {
         $sns = new Sns($queries['title'], $queries['contentId']);
         $sns->publish();
+
+        return (new Response())
+            ->withStatus(200)
+            ->withBody(Utils::streamFor('success'));
     }
 
     return (new Response())
