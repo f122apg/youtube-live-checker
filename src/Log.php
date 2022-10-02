@@ -2,7 +2,6 @@
 namespace F122apg\YoutubeLiveChecker;
 
 class Log {
-    private static $_log = fopen('php://stderr', 'wb');
     private static $_severities = [
         'default',
         'debug',
@@ -22,7 +21,8 @@ class Log {
             throw new \RuntimeException('no such function:' . $name);
         }
 
-        fwrite(self::$_log, json_encode([
+        $resource = fopen('php://stderr', 'wb');
+        fwrite($resource, json_encode([
             'message' => $arguments[0] . "\n",
             'severity' => $severity
         ]));
