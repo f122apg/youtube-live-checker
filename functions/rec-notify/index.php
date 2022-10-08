@@ -7,12 +7,11 @@ use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 
-use F122apg\YoutubeLiveChecker\App;
 use F122apg\YoutubeLiveChecker\AWS\Sns;
 
-FunctionsFramework::http('notify', 'notify');
+FunctionsFramework::http('main', 'main');
 
-function notify(ServerRequestInterface $request): ResponseInterface
+function main(ServerRequestInterface $request): ResponseInterface
 {
     $queries = $request->getQueryParams();
 

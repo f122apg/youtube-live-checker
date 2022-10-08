@@ -1,0 +1,13 @@
+{
+    "autoload": {
+        "psr-4": {
+            "F122apg\\YoutubeLiveChecker\\": "src/"
+        }
+    },
+    "require": {
+        "grpc/grpc": "1.42",
+        "google/protobuf": "^3.21",
+        "google/cloud-firestore": "^1.25",
+        "google/cloud-workflows": "^0.2.8"
+    }
+}
