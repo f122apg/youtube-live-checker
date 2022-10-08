@@ -11,7 +11,7 @@ use F122apg\YoutubeLiveChecker\App;
 function main(CloudEvent $cloudevent): ResponseInterface
 {
     $pubsubData = base64_decode($cloudevent->getData()['message']['data']);
-    $channelIds = explode($pubsubData, ',');
+    $channelIds = explode(',', $pubsubData);
 
     if (!empty($channelIds)) {
         foreach ($channelIds as $channelId) {
