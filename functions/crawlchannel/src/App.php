@@ -24,6 +24,7 @@ class App {
 
     public static function checkNowLive(string $channelId) {
         Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
+        Log::info('crawlTarget channelId:' . $channelId);
 
         // RSSフィードの取得
         $xmlStr = Http::getRSSXml($channelId);
