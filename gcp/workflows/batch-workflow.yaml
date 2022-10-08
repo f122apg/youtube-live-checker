@@ -1,0 +1,82 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - bucketName: ${projectId}
+          - batchRegion: "asia-southeast1"
+          - batchInstanceType: "STANDARD"
+          - batchJobId: ${"job-live-download-" + string(int(sys.now()))}
+          - batchApiUrl: ${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/" + batchRegion + "/jobs"}
+          - contentTitle: ${args.title}
+          - contentId: ${args.contentId}
+          - cloudFunctionsUrl: @OVERRIDE_HERE@
+          # pubsub用
+          # - topic: "batch_status"
+          # - pubsubTopic: ${"projects/" + projectId + "/topics/" + topic}
+          # - notificationMessage: ${"{\"title\":\"" + contentTitle + "\", \"contentId\":\"" + contentId + "\"}"}
+          # - pubsubMessage: ${base64.encode(json.encode(notificationMessage))}
+    - recLiveJob:
+        call: http.post
+        args:
+          url: ${batchApiUrl}
+          query:
+            job_id: ${batchJobId}
+          headers:
+            Content-Type: application/json
+          auth:
+            type: OAuth2
+          body:
+            taskGroups:
+              taskSpec:
+                computeResource:
+                  cpuMilli: 500
+                  memoryMib: 512
+                runnables:
+                  - script:
+                      text: bash /mnt/share/job.sh
+                    environment:
+                      variables:
+                        CONTENT_ID: ${contentId}
+                        OUTPUT_PATH: /mnt/share
+                volumes:
+                  - gcs:
+                      remotePath: ${bucketName}
+                    mountPath: /mnt/share
+              taskCount: 1
+              parallelism: 1
+            logsPolicy:
+              destination: CLOUD_LOGGING
+            allocationPolicy:
+              location:
+                allowedLocations:
+                  - ${"regions/" + batchRegion}
+              instances:
+                policy:
+                  # SPOTだと安くなるが、いつでもシャットダウンされる可能性あり
+                  provisioningModel: ${batchInstanceType}
+            # # Preview版だと動かない？
+            # notifications:
+            #   - pubsubTopic: ${pubsubTopic}
+            #     message:
+            #       type: JOB_STATE_CHANGED
+            #       newJobState: QUEUED
+            #   - pubsubTopic: ${pubsubTopic}
+            #     message:
+            #       type: JOB_STATE_CHANGED
+            #       newJobState: SUCCEEDED
+            #   - pubsubTopic: ${pubsubTopic}
+            #     message:
+            #       type: JOB_STATE_CHANGED
+            #       newJobState: FAILED
+    - sendMail:
+        call: http.get
+        args:
+          url: ${cloudFunctionsUrl}
+          query:
+            notify: true
+            title: ${contentTitle}
+            contentId: ${contentId}
+          auth:
+            type: OIDC
