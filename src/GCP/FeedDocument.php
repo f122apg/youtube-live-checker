@@ -17,13 +17,13 @@ class FeedDocument {
      * @return void
      */
     public function __construct(
-        private string $channelId,
-        private string $channelName,
-        private string $contentId,
-        private string $contentTitle,
-        private ContentTypeEnum $contentType,
-        private \DateTime $publishDate,
-        private \DateTime $checkedDate
+        public string $channelId,
+        public string $channelName,
+        public string $contentId,
+        public string $contentTitle,
+        public ContentTypeEnum $contentType,
+        public \DateTime $publishDate,
+        public \DateTime $checkedDate
     ) {}
 
     /**

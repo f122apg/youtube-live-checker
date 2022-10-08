@@ -2,7 +2,6 @@
 namespace F122apg\YoutubeLiveChecker\GCP;
 
 use Google\Cloud\Firestore\FirestoreClient;
-use Ramsey\Uuid\Uuid;
 
 use F122apg\YoutubeLiveChecker\App;
 use F122apg\YoutubeLiveChecker\GCP\FeedDocument;
@@ -36,7 +35,7 @@ class Firestore {
      */
     public function addDocument(FeedDocument $feedDocument) {
         $doc = $this->_getCollection()
-            ->document(Uuid::uuid4()->toString());
+            ->document($feedDocument->contentId);
 
         $doc->set($feedDocument->getArrayObject());
     }
