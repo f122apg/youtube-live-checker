@@ -1,6 +1,8 @@
 # youtube-live-checker
 **Google Cloud Platform Architecture Version**
 
+==> Local PC ver [here](https://github.com/f122apg/youtube-live-checker/tree/master)
+
 Never miss out  your favorite Youtuber streaming.
 
 This software checks and records if youtuber streaming.
