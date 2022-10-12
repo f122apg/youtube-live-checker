@@ -5,8 +5,9 @@ main:
         assign:
           - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
           - bucketName: ${projectId}
-          - batchRegion: "asia-southeast1"
+          - batchRegion: "us-west1"
           - batchInstanceType: "STANDARD"
+          - batchMachineType: "e2-micro"
           - batchJobId: ${"job-live-download-" + string(int(sys.now()))}
           - batchApiUrl: ${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/" + batchRegion + "/jobs"}
           - contentTitle: ${args.title}
@@ -56,6 +57,7 @@ main:
                 policy:
                   # SPOTだと安くなるが、いつでもシャットダウンされる可能性あり
                   provisioningModel: ${batchInstanceType}
+                  machineType: ${batchMachineType}
             # # Preview版だと動かない？
             # notifications:
             #   - pubsubTopic: ${pubsubTopic}
