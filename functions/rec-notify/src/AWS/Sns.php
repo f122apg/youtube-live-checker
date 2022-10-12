@@ -35,6 +35,13 @@ class Sns {
     private string $_message = '';
 
     /**
+     * Youtubeの動画URL
+     *
+     * @var string
+     */
+    private const _YOUTUBE_VIDEO_URL = 'https://www.youtube.com/watch?v=%s';
+
+    /**
      * 本文を作成する
      *
      * @param string $title 動画タイトル
@@ -89,6 +96,7 @@ class Sns {
      * @return string
      */
     private function _createMessage(string $title, string $contentId): string {
-        return "動画タイトル：$title\n動画ID：$contentId\nの録画を開始しました。";
+        $url = sprintf(self::_YOUTUBE_VIDEO_URL, $contentId);
+        return "動画タイトル：$title\n動画ID：$contentId\n$url\nの録画を開始しました。";
     }
 }
