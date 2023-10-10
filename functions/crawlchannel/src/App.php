@@ -60,7 +60,8 @@ class App {
 
         // 定期的に古いContentIDを削除する
         // そうしないと、FirestoreのRead OPSが凄い数になるため
-        $firestore->deleteDocuments($feedContentIds);
+        Log::info('Deleting documents...');
+        $firestore->deleteDocuments($channelId, $feedContentIds);
 
         Log::info('Live check end');
     }
