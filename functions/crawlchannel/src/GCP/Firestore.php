@@ -21,6 +21,13 @@ class Firestore {
      */
     private const _COLLECTION_NAME = 'feed';
 
+    /**
+     * Firestoreのキャッシュ用Document
+     *
+     * @var array
+     */
+    private array $cachedDocuments = [];
+
     public function __construct() {
         $this->_client = new FirestoreClient([
             'projectId' => getenv(App::ENV_PROJECT_ID),
@@ -41,6 +48,21 @@ class Firestore {
     }
 
     /**
+     * FirestoreのDocumentを最新（15個）以外削除する
+     *
+     * @param array $feedContentIds RSSフィードから取得したContentID
+     * @return void
+     */
+    public function deleteDocuments($feedContentIds) {
+        foreach ($this->cachedDocuments as $doc) {
+            // RSSフィードにないContentIDはもう使用しない古いContentIDなので削除する
+            if (!in_array($doc['contentId'], $feedContentIds, true)) {
+                $this->_client->document(self::_COLLECTION_NAME . '/' . $doc['contentId'])->delete();
+            }
+        }
+    }
+
+    /**
      * Firestoreに登録されていないContentIDを抽出する
      *
      * @param array $contentIds コンテンツIDの配列
@@ -48,7 +70,10 @@ class Firestore {
      */
     public function getNewContentIds(array $contentIds):array {
         $col = $this->_getCollection();
-        $docs = $col->documents();
+        // キャッシュがあれば、そちらのDocumentsを見る
+        $docs = count($this->cachedDocuments)
+            ? $this->cachedDocuments
+            : $col->documents();
 
         if (empty($docs)) {
             return $contentIds;
