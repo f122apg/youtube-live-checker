@@ -15,7 +15,7 @@ chmod +x yt-dlp
 
 # live download
 mkdir /work
-./yt-dlp -P /work --live-from-start --write-all-thumbnails --audio-quality 0 --keep-video -f bestvideo*+bestaudio/best ${CONTENT_ID}
+./yt-dlp -P /work --live-from-start --write-all-thumbnails --audio-quality 0 -f bestvideo*+bestaudio/best ${CONTENT_ID}
 
 # compress videos
 zip ${CONTENT_ID}.zip /work/*
