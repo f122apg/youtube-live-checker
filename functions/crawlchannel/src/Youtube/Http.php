@@ -8,6 +8,12 @@ class Http {
     private const _YOUTUBE_API_VIDEO = 'https://content-youtube.googleapis.com/youtube/v3/videos?id=%s&key=%s&part=snippet';
     private const _ENV_YOUTUBE_API_KEY = 'YOUTUBE_API_KEY';
 
+    /**
+     * Youtube RSSからXMLを取得する
+     *
+     * @param string $channelID チャンネルID
+     * @return string XML
+     */
     public static function getRSSXml(string $channelId): string {
         $url = sprintf(self::_YOUTUBE_FEED_XML, $channelId);
         $curl = curl_init($url);
@@ -28,6 +34,12 @@ class Http {
         return $response;
     }
 
+    /**
+     * Youtube APIから動画の情報を取得する
+     *
+     * @param string $contentID コンテンツID
+     * @return RSSEntry
+     */
     public static function getVideoInfo(string $contentId): RSSEntry {
         $url = sprintf(self::_YOUTUBE_API_VIDEO, $contentId, getenv(self::_ENV_YOUTUBE_API_KEY));
         $curl = curl_init($url);
