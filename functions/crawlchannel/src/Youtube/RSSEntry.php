@@ -1,7 +1,6 @@
 <?php
 namespace F122apg\YoutubeLiveChecker\Youtube;
 
-use F122apg\YoutubeLiveChecker\GCP\FeedDocument;
 use F122apg\YoutubeLiveChecker\GCP\ContentTypeEnum;
 
 class RSSEntry {
@@ -42,14 +41,20 @@ class RSSEntry {
     }
 
     /**
-     * DBに保存するか
-     * upcomingだった場合、配信がこれから始まる可能性があるため、
-     * 次回もチェック対象とするため、DBには保存しない
+     * Firestoreのドキュメントからインスタンスを生成する
      *
-     * @return bool
+     * @param array $document Firestoreのドキュメントの１つ
+     * @return RSSEntry
      */
-    public function isSaveItem(): bool {
-        return $this->liveStatus !== self::_LIVE_STATUS_UPCOMING;
+    public static function fromFirestore($document): RSSEntry {
+        return new static(
+            $document['channelId'],
+            $document['channelName'],
+            $document['contentId'],
+            $document['contentTitle'],
+            $document['liveStatus'],
+            new \DateTime($document['publishDate']),
+        );
     }
 
     /**
@@ -59,22 +64,5 @@ class RSSEntry {
      */
     public function isNowLive(): bool {
         return $this->liveStatus === self::_LIVE_STATUS_LIVE;
-    }
-
-    /**
-     * FeedDocumentへ変換する
-     *
-     * @return FeedDocument
-     */
-    public function toFeedDocument(): FeedDocument {
-        return new FeedDocument(
-            $this->channelId,
-            $this->channelName,
-            $this->contentId,
-            $this->contentTitle,
-            $this->contentType,
-            $this->publishDate,
-            new \DateTime('now', new \DateTimeZone('UTC'))
-        );
     }
 }

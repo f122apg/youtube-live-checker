@@ -1,8 +1,8 @@
 <?php
 namespace F122apg\YoutubeLiveChecker;
 
+use F122apg\YoutubeLiveChecker\GCP\BatchClient;
 use F122apg\YoutubeLiveChecker\Log;
-use F122apg\YoutubeLiveChecker\GCP\Firestore;
 use F122apg\YoutubeLiveChecker\GCP\Workflows;
 use F122apg\YoutubeLiveChecker\Youtube\RSSParser;
 use F122apg\YoutubeLiveChecker\Youtube\Http;
@@ -16,12 +16,10 @@ class App {
     public const ENV_PROJECT_ID = 'PROJECT_ID';
 
     /**
-     * GCPのRegion
+     * 配信されているかチェックする
      *
-     * @var string
+     * @param string $channelId チャンネルID
      */
-    public const ENV_REGION = 'REGION';
-
     public static function checkNowLive(string $channelId) {
         Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
         Log::info('crawlTarget channelId:' . $channelId);
@@ -31,20 +29,14 @@ class App {
         $parser = new RSSParser($xmlStr);
         // RSSフィードから取得したContentIdを抽出
         $feedContentIds = $parser->getContentIds();
+        $batchClient = new BatchClient();
 
-        $firestore = new Firestore();
-        // DBに登録されていないContentIdを抽出（新しい動画として認識する）
-        $newContentIds = $firestore->getNewContentIds($feedContentIds);
-
-        foreach ($newContentIds as $contentId) {
+        foreach ($feedContentIds as $contentId) {
             $entry = Http::getVideoInfo($contentId);
-            if ($entry->isSaveItem()) {
-                $firestore->addDocument($entry->toFeedDocument());
-            }
 
-            Log::info('Found new ContentID:' . $entry->contentId);
-
-            if ($entry->isNowLive()) {
+            // 配信中かつ、録画していないコンテンツIDであれば録画を開始する
+            if ($entry->isNowLive() && !$batchClient->isRecordingLive($contentId)) {
+                Log::info('[' . $contentId . ']: is live! T:CONTENT_ID');
                 Log::info(
                     'Rec starting... StartTime:' .
                     (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM) .
@@ -52,21 +44,25 @@ class App {
                     ' ID:' . $entry->contentId
                 );
 
-                self::_startDownload($entry->contentTitle, $entry->contentId);
+                self::_startRecording($entry->contentTitle, $entry->contentId);
+            } else if (!$entry->isNowLive()) {
+                Log::info('[' . $contentId . ']: not a live. T:CONTENT_ID');
             } else {
-                Log::info('This id is not a live.');
+                Log::info('[' . $contentId . ']: is recording. T:CONTENT_ID');
             }
         }
-
-        // 定期的に古いContentIDを削除する
-        // そうしないと、FirestoreのRead OPSが凄い数になるため
-        Log::info('Deleting documents...');
-        $firestore->deleteDocuments($channelId, $feedContentIds);
 
         Log::info('Live check end');
     }
 
-    private static function _startDownload(string $title, string $contentId) {
+    /**
+     * 配信の録画を開始する
+     *
+     * @param string $title 配信タイトル
+     * @param string $contentId コンテンツID
+     * @return void
+     */
+    private static function _startRecording(string $title, string $contentId) {
         Workflows::execute($title, $contentId);
     }
 }

@@ -14,6 +14,13 @@ class Workflows {
     public const ENV_WORKFLOW_NAME = 'WORKFLOW_NAME';
 
     /**
+     * WorkflowのRegion
+     *
+     * @var string
+     */
+    public const ENV_WORKFLOW_REGION = 'WORKFLOW_REGION';
+
+    /**
      * Workflowsを実行する
      *
      * @param string $title 動画タイトル
@@ -26,7 +33,7 @@ class Workflows {
         try {
             $formattedParent = $client->workflowName(
                 getenv(App::ENV_PROJECT_ID),
-                getenv(App::ENV_REGION),
+                getenv(self::ENV_WORKFLOW_REGION),
                 getenv(self::ENV_WORKFLOW_NAME)
             );
             $execution = new Execution([
