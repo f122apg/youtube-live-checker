@@ -23,8 +23,8 @@ class Log {
 
         $resource = fopen('php://stderr', 'wb');
         fwrite($resource, json_encode([
-            'message' => $arguments[0] . "\n",
+            'message' => $arguments[0],
             'severity' => $severity
-        ]));
+        ]) . PHP_EOL);
     }
 }
