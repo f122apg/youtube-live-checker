@@ -13,7 +13,6 @@ main:
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
           - cloudFunctionsUrl: @OVERRIDE_HERE@
-          # pubsub用
           # - topic: "batch_status"
           # - pubsubTopic: ${"projects/" + projectId + "/topics/" + topic}
           # - notificationMessage: ${"{\"title\":\"" + contentTitle + "\", \"contentId\":\"" + contentId + "\"}"}
@@ -55,10 +54,8 @@ main:
                   - ${"regions/" + batchRegion}
               instances:
                 policy:
-                  # SPOTだと安くなるが、いつでもシャットダウンされる可能性あり
                   provisioningModel: ${batchInstanceType}
                   machineType: ${batchMachineType}
-            # # Preview版だと動かない？
             # notifications:
             #   - pubsubTopic: ${pubsubTopic}
             #     message:

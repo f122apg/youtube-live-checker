@@ -1,1 +1,8 @@
 /vendor/
+
+gcp/**/*.csv
+gcp/**/*.yaml
+!gcp/cloud_functions/tmpl_crawlchannel.yaml
+!gcp/cloud_functions/tmpl_rec-notify.yaml
+!gcp/workflows/tmpl_batch-workflows.yaml
+!gcp/cloud_scheduler/tmpl_message_body
