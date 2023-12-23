@@ -56,6 +56,8 @@ main:
                 policy:
                   provisioningModel: ${batchInstanceType}
                   machineType: ${batchMachineType}
+                  bootDisk:
+                    type: pd-standard
             # notifications:
             #   - pubsubTopic: ${pubsubTopic}
             #     message:
