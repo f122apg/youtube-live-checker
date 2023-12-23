@@ -13,10 +13,6 @@ main:
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
           - cloudFunctionsUrl: @OVERRIDE_HERE@
-          # - topic: "batch_status"
-          # - pubsubTopic: ${"projects/" + projectId + "/topics/" + topic}
-          # - notificationMessage: ${"{\"title\":\"" + contentTitle + "\", \"contentId\":\"" + contentId + "\"}"}
-          # - pubsubMessage: ${base64.encode(json.encode(notificationMessage))}
     - recLiveJob:
         call: http.post
         args:
@@ -58,19 +54,6 @@ main:
                   machineType: ${batchMachineType}
                   bootDisk:
                     type: pd-standard
-            # notifications:
-            #   - pubsubTopic: ${pubsubTopic}
-            #     message:
-            #       type: JOB_STATE_CHANGED
-            #       newJobState: QUEUED
-            #   - pubsubTopic: ${pubsubTopic}
-            #     message:
-            #       type: JOB_STATE_CHANGED
-            #       newJobState: SUCCEEDED
-            #   - pubsubTopic: ${pubsubTopic}
-            #     message:
-            #       type: JOB_STATE_CHANGED
-            #       newJobState: FAILED
     - sendMail:
         call: http.get
         args:
