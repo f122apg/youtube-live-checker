@@ -7,6 +7,7 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 
 use F122apg\YoutubeLiveChecker\App;
+use F122apg\YoutubeLiveChecker\Log;
 
 function main(CloudEvent $cloudevent): ResponseInterface
 {
@@ -14,9 +15,19 @@ function main(CloudEvent $cloudevent): ResponseInterface
     $channelIds = explode(',', $pubsubData);
 
     if (!empty($channelIds)) {
+        $totalCount = count($channelIds);
+        Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
+        Log::info('crawlTargetTotal: ' . $totalCount);
+        $counter = 1;
+
         foreach ($channelIds as $channelId) {
+            Log::info('crawlCount ' . $counter . '/' . $totalCount);
             App::checkNowLive($channelId);
+
+            $counter ++;
         }
+
+        Log::info('Live check end');
 
         return (new Response())
             ->withStatus(200)

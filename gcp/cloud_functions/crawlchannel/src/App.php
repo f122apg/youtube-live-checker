@@ -29,7 +29,6 @@ class App {
      * @param string $channelId チャンネルID
      */
     public static function checkNowLive(string $channelId) {
-        Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
         Log::info('crawlTarget channelId:' . $channelId);
 
         // RSSフィードの取得
@@ -75,8 +74,6 @@ class App {
                 Log::info('[' . $contentId . ']: is recording. T:CONTENT_ID');
             }
         }
-
-        Log::info('Live check end');
     }
 
     /**
