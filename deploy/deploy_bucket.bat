@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo deploying bucket...
+echo [96mdeploying bucket...[0m
 
 set BUCKET_LOCATION=US-WEST1
 

@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo deploying pubsub...
+echo [96mdeploying pubsub...[0m
 
 call gcloud pubsub topics create %PS_TOPIC_NAME%
 

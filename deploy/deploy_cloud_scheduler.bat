@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo deploying cloud scheduler...
+echo [96mdeploying cloud scheduler...[0m
 
 set CS_JOB_NAME=checkLiveCron
 set CS_LOCATION=asia-northeast1

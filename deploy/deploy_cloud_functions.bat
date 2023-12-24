@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo deploying cloud functions...
+echo [96mdeploying cloud functions...[0m
 
 set CF_BASE_PATH=%~dp0..\gcp\cloud_functions\
 
@@ -22,7 +22,7 @@ call :deploy_cf
 exit /b 0
 
 :create_cf_env_files
-    echo create env file
+    echo [96mcreate env file[0m
     set CF_ENV_FILE_1=!CF_CRAWLCHANNEL_ENV_FILE!
     set CF_ENV_FILE_2=!CF_REC-NOTIFY_ENV_FILE!
 
@@ -45,7 +45,7 @@ exit /b 0
     exit /b
 
 :deploy_cf
-    echo deploy functions: %CF_CRAWLCHANNEL_FUNCTION_NAME%
+    echo [96mdeploy functions: %CF_CRAWLCHANNEL_FUNCTION_NAME%[0m
 
     rem deploy crawlchannel
     call gcloud functions deploy %CF_CRAWLCHANNEL_FUNCTION_NAME%^
@@ -58,7 +58,7 @@ exit /b 0
         --docker-registry=artifact-registry^
         --trigger-topic %PS_TOPIC_NAME%
 
-    echo deploy functions: %CF_REC-NOTIFY_FUNCTION_NAME%
+    echo [96mdeploy functions: %CF_REC-NOTIFY_FUNCTION_NAME%[0m
 
     rem deploy rec-notify
     call gcloud functions deploy %CF_REC-NOTIFY_FUNCTION_NAME%^

@@ -23,9 +23,11 @@ set PS_TOPIC_NAME=call_function
 set CF_REC-NOTIFY_FUNCTION_NAME=rec-notify
 set CF_REGION=us-west1
 
-set /p PROJECT_ID=Please input projectId:
-set /p ACCOUNT_NAME=Please input account:
-set /p AWS_SNS_TOPIC=Please input aws sns topic:
+set /p PROJECT_ID=[96mPlease input projectId:[0m
+set /p ACCOUNT_NAME=[96mPlease input account:[0m
+set /p AWS_ACCESS_KEY_ID=[96mPlease input aws access key:[0m
+set /p AWS_SECRET_ACCESS_KEY=[96mPlease input secret access key:[0m
+set /p AWS_SNS_TOPIC=[96mPlease input aws sns topic:[0m
 
 rem deploying services
 call :init_project
@@ -37,6 +39,9 @@ call deploy/deploy_pubsub.bat
 call deploy/deploy_cloud_functions.bat
 call deploy/deploy_workflows.bat
 call deploy/deploy_cloud_scheduler.bat
+
+echo [96mdeploy compleated[0m
+pause
 
 exit /b 0
 
@@ -54,6 +59,7 @@ exit /b 0
     exit /b
 
 :enable_services
+    echo [96menable services...[0m
     rem Artifact Registry API
     rem Artifact Registry API
     rem Cloud Build API
@@ -86,6 +92,7 @@ exit /b 0
     exit /b
 
 :create_api_key
+    echo [96mcreate youtube api key...[0m
     set YOUTUBE_API_KEY_DISPLAY_NAME=Youtube Data API Key
     rem create api key
     call gcloud services api-keys create --display-name="%YOUTUBE_API_KEY_DISPLAY_NAME%" --api-target="service=youtube.googleapis.com"

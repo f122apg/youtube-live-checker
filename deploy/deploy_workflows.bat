@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo deploying workflows...
+echo [96mdeploying workflows...[0m
 
 set WF_BASE_PATH=%~dp0..\gcp\workflows\
 set WF_SOURCE=batch-workflows.yaml
@@ -28,15 +28,24 @@ exit /b 0
 
 :create_service_account
     call gcloud iam service-accounts create %WF_SERVICE_ACCOUNT%
+
     call gcloud projects add-iam-policy-binding %PROJECT_ID% ^
         --member "serviceAccount:%WF_SERVICE_ACCOUNT_FULL%" ^
         --role "roles/workflows.editor"
-
+    call gcloud projects add-iam-policy-binding %PROJECT_ID% ^
+        --member "serviceAccount:%WF_SERVICE_ACCOUNT_FULL%" ^
+        --role "roles/batch.jobsEditor"
+    call gcloud projects add-iam-policy-binding %PROJECT_ID% ^
+        --member "serviceAccount:%WF_SERVICE_ACCOUNT_FULL%" ^
+        --role "roles/run.invoker"
+    call gcloud projects add-iam-policy-binding %PROJECT_ID% ^
+        --member "serviceAccount:%WF_SERVICE_ACCOUNT_FULL%" ^
+        --role "roles/iam.serviceAccountUser"
     exit /b
 
 :create_workflows_env_file
     set WF_TMPL_ENV_PATH=%WF_BASE_PATH%tmpl_%WF_SOURCE%
-    set WF_ENV_PATH=%CF_BASE_PATH%%WF_SOURCE%
+    set WF_ENV_PATH=%WF_BASE_PATH%%WF_SOURCE%
 
     if exist !WF_ENV_PATH! (
         del !WF_ENV_PATH!
