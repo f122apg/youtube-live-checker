@@ -82,11 +82,11 @@ https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/
 1. If no errors occur in the flow shown to the right, the deployment was successful.
 
 ### Location of recorded files
-The files are stored in Cloud Storage.
+The files are stored in Cloud Storage.  
 A bucket is created with the project ID, so please check the contents.
 
 ### Add or change the channels you want to record.
-Channels to be recorded are managed by Cloud Scheduler.
+Channels to be recorded are managed by Cloud Scheduler.  
 You can add or change channels by changing the Cloud Scheduler settings.
 
 1. select Cloud Scheduler and edit it.

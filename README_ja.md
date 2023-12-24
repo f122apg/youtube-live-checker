@@ -80,11 +80,11 @@ https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/
 1. 右に表示されるフローでエラーが発生しなければデプロイに成功しています。
 
 ### 録画されたファイルの保存場所
-Cloud Storageに保存しています。
+Cloud Storageに保存しています。  
 プロジェクトIDでbucketが作成されているので中身を確認してください。
 
 ### 録画したいチャンネルの追加や変更
-録画対象のチャンネルはCloud Schedulerで管理しています。
+録画対象のチャンネルはCloud Schedulerで管理しています。  
 Cloud Schedulerの設定を変更することでチャンネルの追加や変更が可能です。
 
 1. Cloud Schedulerを選択して編集します。
