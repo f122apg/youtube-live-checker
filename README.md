@@ -19,8 +19,8 @@ If you want to run locally, please check [here](https://github.com/f122apg/youtu
 1. `git clone` the `cloud_functions` branch.
 1. copy [tmpl_message_body.csv](https://github.com/f122apg/youtube-live-checker/blob/cloud_functions/gcp/cloud_scheduler/tmpl_message_body.csv) and create `message_body.csv`.
 1. put the IDs of the channels you want to record in `message_body.csv`, separated by commas.
-*ChannelID must be converted from `@UserName` to get a string of the form `Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`.
- ChannelID can be obtained from the following tools.
+*ChannelID must be converted from `@UserName` to get a string of the form `Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`.  
+ ChannelID can be obtained from the following tools.  
 https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/
 
 #### Working with AWS

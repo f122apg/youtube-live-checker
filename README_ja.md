@@ -17,8 +17,8 @@
 1. `cloud_functions`ブランチを`git clone`してください。
 1. [tmpl_message_body.csv](https://github.com/f122apg/youtube-live-checker/blob/cloud_functions/gcp/cloud_scheduler/tmpl_message_body.csv)をコピーし、`message_body.csv`を作成してください。
 1. `message_body.csv`に録画したいチャンネルのIDをカンマ区切りで入れてください。
-*ChannelIDは`@UserName`から変換して、`Uxxxxxxxxxxxxxxxxxxxxxxx`という形式の文字列を取得する必要があります。
- ChannelIDは以下のツール等で取得可能です。
+*ChannelIDは`@UserName`から変換して、`Uxxxxxxxxxxxxxxxxxxxxxxx`という形式の文字列を取得する必要があります。  
+ ChannelIDは以下のツール等で取得可能です。  
 https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/
 
 #### AWSの作業
