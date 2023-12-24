@@ -17,6 +17,13 @@ class App {
     public const ENV_PROJECT_ID = 'PROJECT_ID';
 
     /**
+     * APIの有効ステータス
+     *
+     * @var bool
+     */
+    public static $isAvailableApi = true;
+
+    /**
      * 配信されているかチェックする
      *
      * @param string $channelId チャンネルID
@@ -24,9 +31,6 @@ class App {
     public static function checkNowLive(string $channelId) {
         Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
         Log::info('crawlTarget channelId:' . $channelId);
-
-        // APIの有効ステータス
-        $isAvailableApi = true;
 
         // RSSフィードの取得
         $xmlStr = Http::getRSSXml($channelId);
@@ -37,7 +41,7 @@ class App {
 
         foreach ($feedContentIds as $contentId) {
             $entry = null;
-            if ($isAvailableApi) {
+            if (self::$isAvailableApi) {
                 try {
                     // Youtube Data API経由から動画情報を取得
                     $entry = Http::getVideoInfo($contentId);
@@ -48,7 +52,7 @@ class App {
                     $entry = Html::getVideoInfo($contentId);
 
                     // 以降の処理ではAPIを使わない
-                    $isAvailableApi = false;
+                    self::$isAvailableApi = false;
                 }
             } else {
                 $entry = Html::getVideoInfo($contentId);
