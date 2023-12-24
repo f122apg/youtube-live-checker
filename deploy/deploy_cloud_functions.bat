@@ -55,6 +55,7 @@ exit /b 0
         --entry-point=%CF_ENTRYPOINT%^
         --memory=%CF_MEMORY%MB^
         --env-vars-file=%CF_BASE_PATH%%CF_CRAWLCHANNEL_ENV_FILE%^
+        --max-instances=3^
         --docker-registry=artifact-registry^
         --trigger-topic %PS_TOPIC_NAME%
 
