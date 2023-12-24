@@ -1,5 +1,6 @@
 # youtube-live-checker
 日本語版は[こちら](https://github.com/f122apg/youtube-live-checker/blob/cloud_functions/README_ja.md)
+
 This tool is used to record and notify you when a stream is started on a particular Youtube Channel.
 
 **This branch is a version designed on Google Cloud Platform.**
@@ -79,6 +80,10 @@ https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/
     ```
 
 1. If no errors occur in the flow shown to the right, the deployment was successful.
+
+### Location of recorded files
+The files are stored in Cloud Storage.
+A bucket is created with the project ID, so please check the contents.
 
 ### Add or change the channels you want to record.
 Channels to be recorded are managed by Cloud Scheduler.
