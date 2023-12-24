@@ -3,7 +3,7 @@
 
 This tool is used to record and notify you when a stream is started on a particular Youtube Channel.
 
-**This branch is a version designed on Google Cloud Platform.**
+**This branch is a version designed on Google Cloud Platform.**  
 If you want to run locally, please check [here](https://github.com/f122apg/youtube-live-checker/tree/master).
 
 ## Architecture

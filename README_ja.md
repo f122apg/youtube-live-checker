@@ -1,7 +1,7 @@
 # youtube-live-checker
 特定のYoutube Channelで配信が始まったら、録画と通知を行うツールです。
 
-**このブランチはGoogle Cloud Platformで設計されたバージョンです。**
+**このブランチはGoogle Cloud Platformで設計されたバージョンです。**  
 ローカルで動作させる場合、[こちら](https://github.com/f122apg/youtube-live-checker/tree/master)をご確認ください。
 
 ## アーキテクチャ
