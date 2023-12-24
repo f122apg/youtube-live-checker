@@ -6,6 +6,7 @@ use F122apg\YoutubeLiveChecker\Log;
 use F122apg\YoutubeLiveChecker\GCP\Workflows;
 use F122apg\YoutubeLiveChecker\Youtube\RSSParser;
 use F122apg\YoutubeLiveChecker\Youtube\Http;
+use F122apg\YoutubeLiveChecker\Youtube\Html;
 
 class App {
     /**
@@ -32,7 +33,16 @@ class App {
         $batchClient = new BatchClient();
 
         foreach ($feedContentIds as $contentId) {
-            $entry = Http::getVideoInfo($contentId);
+            $entry = null;
+            try {
+                // Youtube Data API経由から動画情報を取得
+                $entry = Http::getVideoInfo($contentId);
+            } catch (\Exception $ex) {
+                // エラーが発生したら、Quotaに到達したと思われるのでHTMLから動画情報を取得
+                Log::error($ex->getMessage());
+                Log::error('Probably reached the quota limit.');
+                $entry = Html::getVideoInfo($contentId);
+            }
 
             // 配信中かつ、録画していないコンテンツIDであれば録画を開始する
             if ($entry->isNowLive() && !$batchClient->isRecordingLive($contentId)) {

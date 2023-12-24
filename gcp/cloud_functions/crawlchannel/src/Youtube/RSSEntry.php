@@ -4,9 +4,9 @@ namespace F122apg\YoutubeLiveChecker\Youtube;
 use F122apg\YoutubeLiveChecker\GCP\ContentTypeEnum;
 
 class RSSEntry {
-    private const _LIVE_STATUS_NONE = 'none';
-    private const _LIVE_STATUS_UPCOMING = 'upcoming';
-    private const _LIVE_STATUS_LIVE = 'live';
+    public const LIVE_STATUS_NONE = 'none';
+    public const LIVE_STATUS_UPCOMING = 'upcoming';
+    public const LIVE_STATUS_LIVE = 'live';
 
     /**
      * コンテンツタイプ
@@ -35,26 +35,9 @@ class RSSEntry {
         public \DateTime $publishDate,
     ) {
         // liveStatusから配信か、動画か判定する（配信が終了していた場合、それも動画となる）
-        $this->contentType = $liveStatus === self::_LIVE_STATUS_LIVE || $liveStatus === self::_LIVE_STATUS_UPCOMING
+        $this->contentType = $liveStatus === self::LIVE_STATUS_LIVE || $liveStatus === self::LIVE_STATUS_UPCOMING
             ? ContentTypeEnum::live
             : ContentTypeEnum::video;
-    }
-
-    /**
-     * Firestoreのドキュメントからインスタンスを生成する
-     *
-     * @param array $document Firestoreのドキュメントの１つ
-     * @return RSSEntry
-     */
-    public static function fromFirestore($document): RSSEntry {
-        return new static(
-            $document['channelId'],
-            $document['channelName'],
-            $document['contentId'],
-            $document['contentTitle'],
-            $document['liveStatus'],
-            new \DateTime($document['publishDate']),
-        );
     }
 
     /**
@@ -63,6 +46,6 @@ class RSSEntry {
      * @return bool
      */
     public function isNowLive(): bool {
-        return $this->liveStatus === self::_LIVE_STATUS_LIVE;
+        return $this->liveStatus === self::LIVE_STATUS_LIVE;
     }
 }
