@@ -25,6 +25,9 @@ class App {
         Log::info('Live check start:' . (new \DateTime('now', new \DateTimeZone('UTC')))->format(\DateTime::ATOM));
         Log::info('crawlTarget channelId:' . $channelId);
 
+        // APIの有効ステータス
+        $isAvailableApi = true;
+
         // RSSフィードの取得
         $xmlStr = Http::getRSSXml($channelId);
         $parser = new RSSParser($xmlStr);
@@ -34,13 +37,20 @@ class App {
 
         foreach ($feedContentIds as $contentId) {
             $entry = null;
-            try {
-                // Youtube Data API経由から動画情報を取得
-                $entry = Http::getVideoInfo($contentId);
-            } catch (\Exception $ex) {
-                // エラーが発生したら、Quotaに到達したと思われるのでHTMLから動画情報を取得
-                Log::error($ex->getMessage());
-                Log::error('Probably reached the quota limit.');
+            if ($isAvailableApi) {
+                try {
+                    // Youtube Data API経由から動画情報を取得
+                    $entry = Http::getVideoInfo($contentId);
+                } catch (\Exception $ex) {
+                    // エラーが発生したら、Quotaに到達したと思われるのでHTMLから動画情報を取得
+                    Log::error($ex->getMessage());
+                    Log::error('Probably reached the quota limit.');
+                    $entry = Html::getVideoInfo($contentId);
+
+                    // 以降の処理ではAPIを使わない
+                    $isAvailableApi = false;
+                }
+            } else {
                 $entry = Html::getVideoInfo($contentId);
             }
 
