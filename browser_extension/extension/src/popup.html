@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Download Extension</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        img {
+            display: block;
+            width: 288px;
+            height: 162px;
+        }
+
+        #error-area span {
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="video-area">
+        <div>Video Thumb: <img id="thumbnail"></img></div>
+        <div>Video ID: <span id="id"></span></div>
+        <div>Video title: <span id="title"></span></div>
+        <button id="downloadButton">Download</button>
+    </div>
+    <div id="error-area" class="hide center">
+        <span>Cannot download the video outside of Youtube.</span>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

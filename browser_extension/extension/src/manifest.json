@@ -1,0 +1,56 @@
+{
+    "manifest_version": 3,
+    "name": "Youtube Downloader",
+    "description": "Youtube Downloader.",
+    "version": "1.0",
+    "icons": {
+        "128": "icon.svg"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "youtube_downloader@f122apg.net",
+            "strict_min_version": "50.0"
+        }
+    },
+    "background": {
+        "service_worker": "background.js",
+        "scripts": ["background.js"]
+    },
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "nativeMessaging",
+        "activeTab",
+        "storage",
+        "unlimitedStorage",
+        "declarativeNetRequest",
+        "declarativeNetRequestWithHostAccess",
+        "declarativeNetRequestFeedback",
+        "notifications"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.youtube.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "options_ui": {
+        "page": "options.html"
+    },
+    "declarative_net_request": {
+        "rule_resources": [{
+            "id": "cors_disabled",
+            "enabled": true,
+            "path": "rules.json"
+        }]
+    },
+    "host_permissions": [
+        "*://*.youtube.com/*",
+        "*://i.ytimg.com/*"
+    ]
+}

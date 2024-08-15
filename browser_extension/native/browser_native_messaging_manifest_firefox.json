@@ -1,0 +1,9 @@
+{
+    "name": "net.f122apg.youtube_downloader",
+    "description": "Retrive gcp token.",
+    "path": "bin\\Release\\net8.0\\native.exe",
+    "type": "stdio",
+    "allowed_extensions": [
+        "youtube_downloader@f122apg.net"
+    ]
+}
