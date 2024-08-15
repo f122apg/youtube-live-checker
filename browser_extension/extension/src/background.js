@@ -38,8 +38,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 });
 
 const saveDownloadHistory = async (thumbnailUrl, videoId, videoTitle) => {
-  console.log('called');
-
   let storage = await chrome.storage.local.get('downloadHistories');
   if (Object.keys(storage).length === 0) {
     storage = {
@@ -52,11 +50,11 @@ const saveDownloadHistory = async (thumbnailUrl, videoId, videoTitle) => {
     thumbnail: thumbnail,
     id: videoId,
     title: videoTitle,
+    download_date: (new Date()).toISOString()
   }
 
   storage.downloadHistories[videoId] = data;
   chrome.storage.local.set(storage, () => {});
-  console.log(storage);
 }
 
 const serializeImage = async (imageUrl) => {
@@ -92,13 +90,14 @@ const gzip = async blob => {
 };
 
 const arrayBufferToBase64 = buffer => {
-  var binary = '';
-  var bytes = new Uint8Array( buffer );
-  var len = bytes.byteLength;
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
   for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode( bytes[ i ] );
+      binary += String.fromCharCode(bytes[i]);
   }
-  return window.btoa( binary );
+
+  return window.btoa(binary);
 }
 
 const getWorkflowExecutionApiUrl = async () => {

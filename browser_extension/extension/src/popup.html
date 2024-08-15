@@ -26,6 +26,15 @@
             font-size: 20px;
         }
 
+        #history-area {
+            margin-top: 10px;
+        }
+
+        #history-area > hr {
+            border-top: 5px solid black;
+            margin-left: -20px;
+        }
+
         .hide {
             display: none !important;
         }
@@ -34,6 +43,19 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        .container {
+            margin-left: -5px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            border-bottom: 2px solid darkgray;
+            padding-bottom: 5px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -47,6 +69,10 @@
     </div>
     <div id="error-area" class="hide center">
         <span>Cannot download the video outside of Youtube.</span>
+    </div>
+    <div id="history-area" class="hide">
+        <hr></hr>
+        <h1>Download History</h1>
     </div>
     <script src="popup.js"></script>
 </body>
