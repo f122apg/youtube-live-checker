@@ -29,12 +29,29 @@
             margin-left: -20px;
         }
 
-        .channel_container {
+        .channel_container > a {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-top: 5px;
             margin-bottom: 5px;
+            padding: 3px;
+            background-color: unset;
+            transition: all 300ms 0s ease;
+            border-radius: 10px;
+        }
+
+        .channel_container > a:link,
+        .channel_container > a:visited,
+        .channel_container > a:hover,
+        .channel_container > a:active {
+            color: unset;
+            text-decoration: none;
+        }
+
+        .channel_container > a:hover {
+            background-color: #efb0ffee;
+            transition: all 300ms 0s ease;
         }
 
         .channel_container .channel_avatar {

@@ -87,8 +87,10 @@ const loadHistories = async () => {
       </a>
     </div>
     <div class="channel_container">
-      <img class="channel_avatar" src="{channel_avatar}"></img>
-      <a class="channel_name" href="https://www.youtube.com/channel/{channel_id}">{channel_name}</a>
+      <a href="https://www.youtube.com/channel/{channel_id}">
+        <img class="channel_avatar" src="{channel_avatar}"></img>
+        <span class="channel_name">{channel_name}</span>
+      </a>
     </div>
     <div>Download date: <span class="download_date">{download_date}</span></div>
   `;
