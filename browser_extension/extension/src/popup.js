@@ -88,7 +88,7 @@ const loadHistories = async () => {
       .replaceAll('{src}', imageSrc)
       .replaceAll('{id}', history.id)
       .replaceAll('{title}', history.title)
-      .replaceAll('{download_date}', history.download_date ? getJstDate(history.download_date))
+      .replaceAll('{download_date}', getJstDate(history.download_date))
       .replaceAll('{channel_id}', history.channel_id)
       .replaceAll('{channel_name}', history.channel_name)
       .replaceAll('{channel_avatar}', channelAvatarSrc);
