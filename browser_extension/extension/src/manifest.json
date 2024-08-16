@@ -51,6 +51,7 @@
     },
     "host_permissions": [
         "*://*.youtube.com/*",
-        "*://i.ytimg.com/*"
+        "*://i.ytimg.com/*",
+        "*://yt3.ggpht.com/*"
     ]
 }

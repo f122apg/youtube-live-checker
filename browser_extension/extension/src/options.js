@@ -20,8 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.set({'gcpSettings': data}, () => {});
   });
 
-  // document.querySelector('#clear').addEventListener('click', () => {
-  //   chrome.storage.local.remove('gcpSettings');
-  //   chrome.storage.local.remove('downloadHistories');
-  // });
+  document.querySelector('#delete').addEventListener('click', async () => {
+    let storage = await chrome.storage.local.get('downloadHistories');
+    if (Object.keys(storage).length === 0) {
+      storage = {
+        downloadHistories: {}
+      };
+    }
+
+    const deleteId = document.querySelector('#delete_id').value;
+    delete storage.downloadHistories[deleteId];
+
+    chrome.storage.local.set(storage, () => {});
+  });
 });

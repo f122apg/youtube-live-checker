@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('id').textContent = videoId;
       document.getElementById('title').textContent = videoTitle;
 
+      document.getElementById('channel_id').textContent = response.channelId;
+      document.getElementById('channel_avatar').setAttribute('src', response.channelAvatar);
+      document.getElementById('channel_name').textContent = response.channelName;
+
       let storage = await chrome.storage.local.get('downloadHistories');
       if (Object.keys(storage).length === 0) {
         return;
@@ -34,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const thumbnailUrl = document.getElementById('thumbnail').getAttribute('src');
     const id = document.getElementById('id').textContent;
     const title = document.getElementById('title').textContent;
+    const channelId = document.getElementById('channel_id').textContent;
+    const channelAvatar = document.getElementById('channel_avatar').getAttribute('src');
+    const channelName = document.getElementById('channel_name').textContent;
 
     document.getElementById('downloadButton').setAttribute('disabled', 'true');
 
@@ -43,7 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       data: {
         videoThumbnailUrl: thumbnailUrl,
         videoId: id,
-        videoTitle: title
+        videoTitle: title,
+        channelId: channelId,
+        channelAvatar: channelAvatar,
+        channelName: channelName,
       }
     }, response => {});
   });
@@ -56,9 +66,14 @@ const loadHistories = async () => {
   }
 
   const htmlTmpl = `
-    <div class="title"><span>{title}</span></div>
-    <div>Video Thumb: <img class="thumbnail" src="{src}"></img></div>
-    <div>Video ID: <span class="id">{id}</span></div>
+    <div class="title">
+      <a class="id" href="https://www.youtube.com/watch?v={id}">{title}</a>
+    </div>
+    <div><img class="thumbnail" src="{src}"></img></div>
+    <div class="channel_container">
+      <img class="channel_avatar" src="{channel_avatar}"></img>
+      <a class="channel_name" href="https://www.youtube.com/channel/{channel_id}">{channel_name}</a>
+    </div>
     <div>Download date: <span class="download_date">{download_date}</span></div>
   `;
 
@@ -68,11 +83,15 @@ const loadHistories = async () => {
   const historyEntries = Object.entries(downloadHistories).map(v => v[1]);
   for (const history of historyEntries) {
     const imageSrc = await getImageUrl(history.thumbnail);
+    const channelAvatarSrc = await getImageUrl(history.channel_avatar);
     const html = htmlTmpl
-      .replace('{src}', imageSrc)
-      .replace('{id}', history.id)
-      .replace('{title}', history.title)
-      .replace('{download_date}', history.download_date ? getJstDate(history.download_date) : 'not recorded');
+      .replaceAll('{src}', imageSrc)
+      .replaceAll('{id}', history.id)
+      .replaceAll('{title}', history.title)
+      .replaceAll('{download_date}', history.download_date ? getJstDate(history.download_date))
+      .replaceAll('{channel_id}', history.channel_id)
+      .replaceAll('{channel_name}', history.channel_name)
+      .replaceAll('{channel_avatar}', channelAvatarSrc);
 
     const container = document.createElement('div');
     container.classList.add('container');

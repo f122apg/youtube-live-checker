@@ -27,7 +27,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         return;
       }
 
-      await saveDownloadHistory(message.data.videoThumbnailUrl, message.data.videoId, message.data.videoTitle);
+      await saveDownloadHistory({
+        thumbnailUrl: message.data.videoThumbnailUrl,
+        videoId: message.data.videoId,
+        videoTitle: message.data.videoTitle,
+        channelId: message.data.channelId,
+        channelName: message.data.channelName,
+        channelAvatar: message.data.channelAvatar,
+      });
 
       await notify('Success Download.\r\n' + message.data.videoTitle);
     } catch (error) {
@@ -37,7 +44,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
 });
 
-const saveDownloadHistory = async (thumbnailUrl, videoId, videoTitle) => {
+const saveDownloadHistory = async (params) => {
   let storage = await chrome.storage.local.get('downloadHistories');
   if (Object.keys(storage).length === 0) {
     storage = {
@@ -45,15 +52,20 @@ const saveDownloadHistory = async (thumbnailUrl, videoId, videoTitle) => {
     };
   }
 
-  const thumbnail = await serializeImage(thumbnailUrl);
+  const thumbnail = await serializeImage(params.thumbnailUrl);
+  const channelId = await getChannelId(params.channelId);
+  const channelAvatar = await serializeImage(params.channelAvatar);
   const data = {
     thumbnail: thumbnail,
-    id: videoId,
-    title: videoTitle,
+    id: params.videoId,
+    title: params.videoTitle,
+    channel_id: channelId,
+    channel_name: params.channelName,
+    channel_avatar: channelAvatar,
     download_date: (new Date()).toISOString()
   }
 
-  storage.downloadHistories[videoId] = data;
+  storage.downloadHistories[params.videoId] = data;
   chrome.storage.local.set(storage, () => {});
 }
 
@@ -98,6 +110,22 @@ const arrayBufferToBase64 = buffer => {
   }
 
   return window.btoa(binary);
+}
+
+const getChannelId = async channelId => {
+  if (!channelId.includes('@')) {
+    return channelId;
+  }
+
+  const startWithChannelId = '<meta itemprop="identifier" content="';
+
+  const request = await fetch('https://www.youtube.com/' + channelId);
+  const response = await request.text();
+
+  const startPos = response.indexOf(startWithChannelId);
+  const endPos = response.indexOf('"', startPos + startWithChannelId.length);
+
+  return response.substring(startPos + startWithChannelId.length, endPos);
 }
 
 const getWorkflowExecutionApiUrl = async () => {

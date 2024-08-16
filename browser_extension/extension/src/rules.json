@@ -23,7 +23,7 @@
             ]
         },
         "condition": {
-            "urlFilter": "*://i.ytimg.com/*",
+            "urlFilter": "*://i.ytimg.com/*|*://yt3.ggpht.com/*",
             "resourceTypes": [
                 "xmlhttprequest"
             ]

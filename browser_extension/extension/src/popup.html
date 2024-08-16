@@ -15,12 +15,6 @@
             margin-top: 10px;
         }
 
-        img {
-            display: block;
-            width: 288px;
-            height: 162px;
-        }
-
         #error-area span {
             font-weight: bold;
             font-size: 20px;
@@ -33,6 +27,20 @@
         #history-area > hr {
             border-top: 5px solid black;
             margin-left: -20px;
+        }
+
+        .channel_container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .channel_container .channel_avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
         }
 
         .hide {
@@ -57,14 +65,25 @@
             font-size: 20px;
             font-weight: bold;
         }
+
+        .thumbnail {
+            display: block;
+            width: 288px;
+            height: 162px;
+        }
     </style>
 </head>
 
 <body>
     <div id="video-area">
-        <div>Video Thumb: <img id="thumbnail"></img></div>
+        <div class="title"><span id="title"></span></div>
+        <div><img id="thumbnail" class="thumbnail"></img></div>
+        <div class="channel_container">
+            <img class="channel_avatar" id="channel_avatar"></img>
+            <span class="channel_name" id="channel_name"></span>
+        </div>
+        <div>Channel ID: <span id="channel_id"></span></div>
         <div>Video ID: <span id="id"></span></div>
-        <div>Video title: <span id="title"></span></div>
         <button id="downloadButton">Download</button>
     </div>
     <div id="error-area" class="hide center">
