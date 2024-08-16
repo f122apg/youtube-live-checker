@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const videoId = response.id;
       const videoTitle = response.title;
 
-      document.getElementById('thumbnail').setAttribute('src', videoThumbnail);
+      await setThumbnail(videoThumbnail, response.onErrorThumbnail);
       document.getElementById('id').textContent = videoId;
       document.getElementById('title').textContent = videoTitle;
 
@@ -58,6 +58,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, response => {});
   });
 });
+
+const setThumbnail = async (thumbnailUrl, onErrorThumbnailUrl) => {
+  const request = await fetch(thumbnailUrl);
+  let url = thumbnailUrl;
+
+  // サムネイルが404だったら、代替サムネイルを取得
+  if (!request.ok) {
+    url = onErrorThumbnailUrl;
+  }
+
+  document.getElementById('thumbnail').setAttribute('src', url);
+}
 
 const loadHistories = async () => {
   const downloadHistories = await getDownloadHistory();

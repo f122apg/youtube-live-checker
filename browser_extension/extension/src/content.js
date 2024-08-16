@@ -4,6 +4,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const videoId = (new URLSearchParams(window.location.search)).get('v');
     const videoTitle = document.querySelector('#title h1 yt-formatted-string').textContent;
     const videoThumbnail = 'https://i.ytimg.com/vi/' + videoId + '/maxresdefault.jpg';
+    const videoOnErrorThumbnail = 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg';
 
     const channelName = document.querySelector('ytd-channel-name.ytd-video-owner-renderer a.yt-simple-endpoint').textContent;
     const channelAvatar = document.querySelector('ytd-video-owner-renderer #img').src;
@@ -12,6 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     sendResponse({
       thumbnail: videoThumbnail,
+      onErrorThumbnail: videoOnErrorThumbnail,
       id: videoId,
       title: videoTitle,
       channelId: channelId,
