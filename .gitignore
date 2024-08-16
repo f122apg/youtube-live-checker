@@ -7,6 +7,8 @@ gcp/**/*.yaml
 !gcp/workflows/tmpl_batch-workflows.yaml
 !gcp/cloud_scheduler/tmpl_message_body.csv
 
+browser_extension/extension/src/_metadata
+
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,csharp
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,csharp
 

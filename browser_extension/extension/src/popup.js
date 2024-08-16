@@ -79,9 +79,13 @@ const loadHistories = async () => {
 
   const htmlTmpl = `
     <div class="title">
-      <a class="id" href="https://www.youtube.com/watch?v={id}">{title}</a>
+      <span>{title}</span>
     </div>
-    <div><img class="thumbnail" src="{src}"></img></div>
+    <div>
+      <a href="https://www.youtube.com/watch?v={id}">
+        <img class="thumbnail" src="{src}"></img>
+      </a>
+    </div>
     <div class="channel_container">
       <img class="channel_avatar" src="{channel_avatar}"></img>
       <a class="channel_name" href="https://www.youtube.com/channel/{channel_id}">{channel_name}</a>
