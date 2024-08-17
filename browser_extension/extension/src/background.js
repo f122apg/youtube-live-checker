@@ -2,21 +2,21 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'sendNativeMessage') {
     const token = await chrome.runtime.sendNativeMessage('net.f122apg.youtube_downloader', null);
 
-    const workflowExecutionsApiUrl = await getWorkflowExecutionApiUrl();
-
-    const data = {
-      argument: JSON.stringify({
-        contentId: message.data.videoId,
-        title: message.data.videoTitle
-      })
-    };
-    const options = {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token},
-      body: JSON.stringify(data)
-    };
-
     try {
+      const workflowExecutionsApiUrl = await getWorkflowExecutionApiUrl();
+
+      const data = {
+        argument: JSON.stringify({
+          contentId: message.data.videoId,
+          title: message.data.videoTitle
+        })
+      };
+      const options = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token},
+        body: JSON.stringify(data)
+      };
+
       const request = await fetch(workflowExecutionsApiUrl, options);
       if (!request.ok) {
         console.log(await request.statusText());
@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       await notify('Success Download.\r\n' + message.data.videoTitle);
     } catch (error) {
       console.log(error);
-      await notify('Failed Download.\r\n' + message.data.videoTitle);
+      await notify('Failed Download.\r\n' + message.data.videoTitle + '\r\n' + error);
     }
   }
 });
@@ -131,19 +131,17 @@ const getChannelId = async channelId => {
 const getWorkflowExecutionApiUrl = async () => {
   const tmpl = 'https://workflowexecutions.googleapis.com/v1/projects/{project_id}/locations/{location}/workflows/{workflow_name}/executions';
 
-  const getGcpSettings = chrome.storage.local.get('gcpSettings');
-  return await getGcpSettings.then((data) => {
-    if (Object.keys(data).length === 0) {
-      throw new Error('Please input gcp settings.');
-    }
+  const storage = await chrome.storage.local.get('gcpSettings');
+  if (Object.keys(storage).length === 0) {
+    throw new Error('Please input gcp settings.');
+  }
 
-    const apiUrl = tmpl
-      .replace('{project_id}', data.gcpSettings.project_id)
-      .replace('{location}', data.gcpSettings.location)
-      .replace('{workflow_name}', data.gcpSettings.workflow_name);
+  const apiUrl = tmpl
+    .replace('{project_id}', storage.gcpSettings.project_id)
+    .replace('{location}', storage.gcpSettings.location)
+    .replace('{workflow_name}', storage.gcpSettings.workflow_name);
 
-      return apiUrl;
-  });
+  return apiUrl;
 }
 
 const notify = async (content) => {
