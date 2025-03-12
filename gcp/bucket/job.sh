@@ -4,7 +4,7 @@ mkdir -p ~/.config/yt-dlp
 cat <<EOF > ~/.config/yt-dlp/config
 # Change language
 --add-header 'Accept-Language:ja-JP'
---extractor-args "youtube:lang=ja"
+--extractor-args "youtube:lang=ja;youtube:player-client=default,-ios"
 --parse-metadata " Japanese: %(meta_language)s"
 
 # Download base directory
@@ -32,7 +32,16 @@ EOF
 
 # install dependencies
 apt update
-apt install -y curl xz-utils zip moreutils
+apt install -y git curl xz-utils zip moreutils python3-pip
+
+# install nodejs
+curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
+bash nodesource_setup.sh
+apt install -y nodejs
+node -v
+
+# install yarn
+npm install -g yarn
 
 # install ffmpeg ffprobe
 curl -LO https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
@@ -48,9 +57,23 @@ sudo ./aws/install
 curl -LO https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
 chmod +x yt-dlp
 
+# install po token generate tool
+cd ~
+git clone --single-branch --branch 0.7.4 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git
+cd bgutil-ytdlp-pot-provider/server/
+yarn install --frozen-lockfile
+npx tsc
+
+python3 -m pip install -U bgutil-ytdlp-pot-provider
+
+cd /
+
+# check container
+docker ps -a
+
 # live download
 mkdir /work
-./yt-dlp ${CONTENT_ID}
+./yt-dlp -v -4 ${CONTENT_ID}
 
 if [ $? -ne 0 ]; then
     exit $?
