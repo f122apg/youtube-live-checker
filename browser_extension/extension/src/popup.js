@@ -127,7 +127,19 @@ const getDownloadHistory = async () => {
   const downloadHistories = storage.downloadHistories;
   const sortedStorage = sortObjectByDate(downloadHistories);
 
-  return sortedStorage;
+  const storageGroupByChannelId = groupingByChannelId(sortedStorage);
+
+  return storageGroupByChannelId;
+}
+
+const groupingByChannelId = obj => {
+  const storageGroup = {};
+
+  for (const [key, data] of Object.entries(obj)) {
+    storageGroup[data.channel_id] = data;
+  };
+
+  return storageGroup;
 }
 
 const sortObjectByDate = obj => {
@@ -155,11 +167,17 @@ const getJstDate = dateIso => {
 }
 
 const getImageUrl = async (base64) => {
-  const gzipBin = base64ToArrayBuffer(base64);
-  const data = await ungzip(gzipBin);
+  let blobUrl = '';
 
-  const blob = new Blob([data], { type: 'image/jpeg' });
-  const blobUrl = URL.createObjectURL(blob);
+  try {
+    const gzipBin = base64ToArrayBuffer(base64);
+    const data = await ungzip(gzipBin);
+
+    const blob = new Blob([data], { type: 'image/jpeg' });
+    blobUrl = URL.createObjectURL(blob);
+  } catch (e) {
+    console.error(e);
+  }
 
   return blobUrl;
 }
