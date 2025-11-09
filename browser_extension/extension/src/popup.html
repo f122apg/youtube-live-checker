@@ -1,133 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 
 <head>
-    <title>Download Extension</title>
-    <style>
-        body {
-            width: 300px;
-            padding: 10px;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-        }
-
-        #openHistoryButton {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        #openHistoryButton:hover {
-            background-color: #2980b9;
-        }
-
-        #error-area span {
-            font-weight: bold;
-            font-size: 20px;
-        }
-
-        #history-area {
-            margin-top: 10px;
-        }
-
-        #history-area > hr {
-            border-top: 5px solid black;
-            margin-left: -20px;
-        }
-
-        #video-area .channel_container,
-        .channel_container > a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            padding: 3px;
-        }
-
-        .channel_container > a {
-            background-color: unset;
-            transition: all 300ms 0s ease;
-            border-radius: 10px;
-        }
-
-        .channel_container > a:link,
-        .channel_container > a:visited,
-        .channel_container > a:hover,
-        .channel_container > a:active {
-            color: unset;
-            text-decoration: none;
-        }
-
-        .channel_container > a:hover {
-            background-color: #efb0ffee;
-            transition: all 300ms 0s ease;
-        }
-
-        .channel_container .channel_avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-        }
-
-        .hide {
-            display: none !important;
-        }
-
-        .center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .container {
-            margin-left: -5px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            border-bottom: 2px solid darkgray;
-            padding-bottom: 5px;
-        }
-
-        .title {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .thumbnail {
-            display: block;
-            width: 288px;
-            height: 162px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Downloader</title>
+    <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
+    <!-- 動画エリア -->
     <div id="video-area">
-        <div class="title"><span id="title"></span></div>
-        <div><img id="thumbnail" class="thumbnail"></img></div>
-        <div class="channel_container">
-            <img class="channel_avatar" id="channel_avatar"></img>
-            <span class="channel_name" id="channel_name"></span>
+        <div class="video-title" id="title"></div>
+
+        <div class="video-thumbnail-container">
+            <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
         </div>
-        <div>Channel ID: <span id="channel_id"></span></div>
-        <div>Video ID: <span id="id"></span></div>
-        <button id="downloadButton">Download</button>
+
+        <div class="channel_container">
+            <a href="#" id="channelLink">
+                <img class="channel_avatar" id="channel_avatar" alt="Channel avatar">
+                <span class="channel_name" id="channel_name"></span>
+            </a>
+        </div>
+
+        <div class="video-info">
+            <div class="video-info-item">
+                <span class="video-info-label">Video ID:</span>
+                <span class="video-info-value" id="id"></span>
+            </div>
+            <div class="video-info-item">
+                <span class="video-info-label">Channel ID:</span>
+                <span class="video-info-value" id="channel_id"></span>
+            </div>
+        </div>
+
+        <button id="downloadButton">Download Video</button>
     </div>
+
+    <!-- エラーエリア -->
     <div id="error-area" class="hide center">
-        <span>Cannot download the video outside of Youtube.</span>
+        <span>⚠️ Download feature is only available on YouTube video pages.</span>
     </div>
+
+    <!-- 履歴エリア -->
     <div id="history-area">
-        <hr></hr>
+        <hr>
         <h1>Download History</h1>
-        <button id="openHistoryButton">Open Full History</button>
+        <button id="openHistoryButton">📋 Open Full History</button>
+        <!-- 履歴アイテムがここに動的に追加されます -->
     </div>
+
     <script type="module" src="popup.js"></script>
 </body>
 

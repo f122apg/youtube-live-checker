@@ -1,0 +1,346 @@
+/* ========================
+   CSS Variables
+   ======================== */
+:root {
+    --primary-color: #3498db;
+    --primary-hover: #2980b9;
+    --danger-color: #e74c3c;
+    --danger-hover: #c0392b;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --bg-color: #f5f6fa;
+    --card-bg: #ffffff;
+    --text-color: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --border-color: #dfe4ea;
+    --border-radius: 8px;
+    --spacing: 16px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+    --transition: all 0.2s ease;
+}
+
+/* ========================
+   Base Styles
+   ======================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 320px;
+    padding: 12px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ========================
+   Video Area
+   ======================== */
+#video-area {
+    background: var(--card-bg);
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing);
+    box-shadow: var(--shadow-sm);
+}
+
+.video-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-color);
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.video-thumbnail-container {
+    position: relative;
+    margin-bottom: 12px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.thumbnail {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+/* Channel Container */
+.channel_container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    padding: 8px;
+    background: var(--bg-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.channel_container:hover {
+    background-color: #e8f4f8;
+}
+
+.channel_container a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+}
+
+.channel_avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+.channel_name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Video Info */
+.video-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+    padding: 8px;
+    background: var(--bg-color);
+    border-radius: calc(var(--border-radius) - 2px);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.video-info-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.video-info-label {
+    font-weight: 500;
+}
+
+.video-info-value {
+    font-family: monospace;
+    color: var(--text-color);
+    word-break: break-all;
+    overflow-wrap: break-word;
+    max-width: 60%;
+    text-align: right;
+}
+
+/* ========================
+   Buttons
+   ======================== */
+button {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+}
+
+#downloadButton {
+    background-color: var(--success-color);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+#downloadButton:hover:not(:disabled) {
+    background-color: #229954;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+#downloadButton:disabled {
+    background-color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#openHistoryButton {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+#openHistoryButton:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ========================
+   Error Area
+   ======================== */
+#error-area {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--border-radius);
+    padding: var(--spacing);
+    margin-bottom: var(--spacing);
+    text-align: center;
+}
+
+#error-area span {
+    display: block;
+    color: #856404;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ========================
+   History Area
+   ======================== */
+#history-area {
+    background: var(--card-bg);
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+#history-area > hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 0 0 var(--spacing) 0;
+}
+
+#history-area > h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+/* History Items */
+.container {
+    background: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+}
+
+.container:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.container:last-child {
+    margin-bottom: 0;
+}
+
+.container .title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.container .thumbnail {
+    width: 100%;
+    height: auto;
+    border-radius: calc(var(--border-radius) - 2px);
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.container .channel_container {
+    margin: 8px 0;
+    padding: 6px;
+}
+
+.container .channel_avatar {
+    width: 28px;
+    height: 28px;
+}
+
+.container .channel_name {
+    font-size: 13px;
+}
+
+.download_date {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ========================
+   Utility Classes
+   ======================== */
+.hide {
+    display: none !important;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ========================
+   Scrollbar Styling
+   ======================== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ========================
+   Animations
+   ======================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#video-area,
+#error-area,
+#history-area {
+    animation: fadeIn 0.3s ease;
+}

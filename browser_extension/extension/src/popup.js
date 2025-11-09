@@ -38,6 +38,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('channel_avatar').setAttribute('src', response.channelAvatar);
       document.getElementById('channel_name').textContent = response.channelName;
 
+      // チャンネルリンクを設定
+      const channelLink = document.getElementById('channelLink');
+      if (response.channelId.startsWith('@')) {
+        channelLink.href = `https://www.youtube.com/${response.channelId}`;
+      } else {
+        channelLink.href = `https://www.youtube.com/channel/${response.channelId}`;
+      }
+      channelLink.target = '_blank';
+
       const histories = await getDownloadHistories();
 
       if (Object.keys(histories).includes(videoId)) {
@@ -103,17 +112,19 @@ const loadHistories = async () => {
       <span>{title}</span>
     </div>
     <div>
-      <a href="https://www.youtube.com/watch?v={id}">
-        <img class="thumbnail" src="{src}"></img>
+      <a href="https://www.youtube.com/watch?v={id}" target="_blank">
+        <img class="thumbnail" src="{src}" alt="{title}">
       </a>
     </div>
     <div class="channel_container">
-      <a href="https://www.youtube.com/channel/{channel_id}">
-        <img class="channel_avatar" src="{channel_avatar}"></img>
+      <a href="https://www.youtube.com/channel/{channel_id}" target="_blank">
+        <img class="channel_avatar" src="{channel_avatar}" alt="{channel_name}">
         <span class="channel_name">{channel_name}</span>
       </a>
     </div>
-    <div>Download date: <span class="download_date">{download_date}</span></div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+      📅 <span class="download_date">{download_date}</span>
+    </div>
   `;
 
   const historyArea = document.querySelector('#history-area');
