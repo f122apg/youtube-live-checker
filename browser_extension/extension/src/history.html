@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download History - Youtube Downloader</title>
+    <link rel="stylesheet" href="history.css">
+</head>
+
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-top">
+            <h1>Download History</h1>
+            <div class="stats" id="stats">
+                <span id="totalVideos">0 videos</span>
+                <span class="separator">•</span>
+                <span id="totalChannels">0 channels</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <!-- 検索バー -->
+            <div class="search-container">
+                <input type="search" id="searchInput" placeholder="Search by title or channel...">
+            </div>
+
+            <!-- 表示モード切替 -->
+            <div class="view-controls">
+                <button id="gridViewBtn" class="view-btn active" title="Grid View" aria-label="Grid View">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="2" width="7" height="7" rx="1"/>
+                        <rect x="11" y="2" width="7" height="7" rx="1"/>
+                        <rect x="2" y="11" width="7" height="7" rx="1"/>
+                        <rect x="11" y="11" width="7" height="7" rx="1"/>
+                    </svg>
+                </button>
+                <button id="listViewBtn" class="view-btn" title="List View" aria-label="List View">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="3" width="16" height="3" rx="1"/>
+                        <rect x="2" y="8" width="16" height="3" rx="1"/>
+                        <rect x="2" y="13" width="16" height="3" rx="1"/>
+                    </svg>
+                </button>
+                <button id="channelGroupViewBtn" class="view-btn" title="Channel Group View" aria-label="Channel Group View">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="2" width="16" height="4" rx="1"/>
+                        <rect x="2" y="8" width="16" height="4" rx="1"/>
+                        <rect x="2" y="14" width="16" height="4" rx="1"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- ソート選択 -->
+            <select id="sortSelect" class="sort-select">
+                <option value="date-desc">Date (Newest First)</option>
+                <option value="date-asc">Date (Oldest First)</option>
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+                <option value="channel-asc">Channel (A-Z)</option>
+                <option value="channel-desc">Channel (Z-A)</option>
+            </select>
+
+            <!-- アクションボタン -->
+            <div class="action-buttons">
+                <button id="exportBtn" class="action-btn" title="Export History">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 12L3 7h3V2h4v5h3L8 12z"/>
+                        <rect x="2" y="13" width="12" height="1"/>
+                    </svg>
+                    Export
+                </button>
+                <button id="importBtn" class="action-btn" title="Import History">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 2L13 7h-3v5H6V7H3L8 2z"/>
+                        <rect x="2" y="13" width="12" height="1"/>
+                    </svg>
+                    Import
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main id="historyContainer" class="grid-view">
+        <!-- 履歴アイテムがここに動的に追加されます -->
+    </main>
+
+    <!-- 空の状態 -->
+    <div id="emptyState" class="empty-state hide">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="32" cy="32" r="30"/>
+            <path d="M20 32h24M32 20v24"/>
+        </svg>
+        <h2>No Download History</h2>
+        <p>Your downloaded videos will appear here.</p>
+    </div>
+
+    <!-- ローディング状態 -->
+    <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- インポート用の非表示input -->
+    <input type="file" id="importInput" accept=".json" hidden>
+
+    <!-- 削除確認ダイアログ -->
+    <div id="deleteDialog" class="dialog-overlay hide">
+        <div class="dialog">
+            <h2>Confirm Delete</h2>
+            <p id="deleteMessage">Are you sure you want to delete this video?</p>
+            <div class="dialog-buttons">
+                <button id="cancelDeleteBtn" class="btn-secondary">Cancel</button>
+                <button id="confirmDeleteBtn" class="btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="history.js"></script>
+</body>
+
+</html>

@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Youtube Downloader",
     "description": "Youtube Downloader.",
-    "version": "1.0",
+    "version": "1.0.2",
     "icons": {
         "128": "icon.svg"
     },
@@ -14,7 +14,8 @@
     },
     "background": {
         "service_worker": "background.js",
-        "scripts": ["background.js"]
+        "scripts": ["background.js"],
+        "type": "module"
     },
     "action": {
         "default_popup": "popup.html"
