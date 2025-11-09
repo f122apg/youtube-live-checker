@@ -117,7 +117,6 @@ const loadHistories = async () => {
   `;
 
   const historyArea = document.querySelector('#history-area');
-  historyArea.classList.remove('hide');
 
   const historyEntries = Object.entries(downloadHistories).map(v => v[1]);
   for (const history of historyEntries) {

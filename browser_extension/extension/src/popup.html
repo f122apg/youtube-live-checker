@@ -15,6 +15,19 @@
             margin-top: 10px;
         }
 
+        #openHistoryButton {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        #openHistoryButton:hover {
+            background-color: #2980b9;
+        }
+
         #error-area span {
             font-weight: bold;
             font-size: 20px;
@@ -106,14 +119,14 @@
         <div>Channel ID: <span id="channel_id"></span></div>
         <div>Video ID: <span id="id"></span></div>
         <button id="downloadButton">Download</button>
-        <button id="openHistoryButton">Open Full History</button>
     </div>
     <div id="error-area" class="hide center">
         <span>Cannot download the video outside of Youtube.</span>
     </div>
-    <div id="history-area" class="hide">
+    <div id="history-area">
         <hr></hr>
         <h1>Download History</h1>
+        <button id="openHistoryButton">Open Full History</button>
     </div>
     <script type="module" src="popup.js"></script>
 </body>
