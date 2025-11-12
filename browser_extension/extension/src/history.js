@@ -397,12 +397,9 @@ class HistoryManager {
 
       this.updateStatistics();
       await this.render();
-      await notify('Video deleted successfully');
-
       this.closeDeleteDialog();
     } catch (error) {
       console.error('Delete error:', error);
-      await notify('Failed to delete video', 'Error');
     }
   }
 
