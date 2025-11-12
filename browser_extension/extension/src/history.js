@@ -257,7 +257,7 @@ class HistoryManager {
         </div>
         <div class="video-card-date">${getJstDate(history.download_date)}</div>
         <div class="video-card-actions">
-          <button class="btn-small btn-secondary" data-action="update" data-id="${history.id}">Update</button>
+          <button class="btn-small btn-success" data-action="update" data-id="${history.id}">Update</button>
           <button class="btn-small btn-danger" data-action="delete" data-id="${history.id}">Delete</button>
         </div>
       </div>

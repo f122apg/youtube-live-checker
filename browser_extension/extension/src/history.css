@@ -7,6 +7,7 @@
     --danger-color: #e74c3c;
     --danger-hover: #c0392b;
     --success-color: #27ae60;
+    --success-hover: #119046;
     --bg-color: #f5f6fa;
     --card-bg: #ffffff;
     --text-color: #2c3e50;
@@ -318,6 +319,15 @@ main {
 
 .btn-secondary:hover {
     background: var(--border-color);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: var(--success-hover);
 }
 
 /* ========================
