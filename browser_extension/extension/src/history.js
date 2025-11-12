@@ -7,7 +7,6 @@ import {
   getDownloadHistories,
   deleteDownloadHistory,
   deleteMultipleHistories,
-  updateDownloadHistory,
   deserializeImage,
   getJstDate,
   notify
@@ -258,7 +257,6 @@ class HistoryManager {
         </div>
         <div class="video-card-date">${getJstDate(history.download_date)}</div>
         <div class="video-card-actions">
-          <button class="btn-small btn-primary" data-action="open" data-id="${history.id}">Open</button>
           <button class="btn-small btn-secondary" data-action="update" data-id="${history.id}">Update</button>
           <button class="btn-small btn-danger" data-action="delete" data-id="${history.id}">Delete</button>
         </div>
@@ -295,7 +293,6 @@ class HistoryManager {
           </div>
         </div>
         <div class="video-item-actions">
-          <button class="btn-small btn-primary" data-action="open" data-id="${history.id}">Open Video</button>
           <button class="btn-small btn-secondary" data-action="update" data-id="${history.id}">Update Metadata</button>
           <button class="btn-small btn-danger" data-action="delete" data-id="${history.id}">Delete</button>
         </div>
@@ -348,9 +345,8 @@ class HistoryManager {
    * カードイベントリスナーを追加
    */
   attachCardEventListeners(element, history) {
-    // 動画を開く
-    element.querySelector('[data-action="open"]')?.addEventListener('click', (e) => {
-      e.stopPropagation();
+    // カード全体をクリックして動画を開く
+    element.addEventListener('click', () => {
       window.open(`https://www.youtube.com/watch?v=${history.id}`, '_blank');
     });
 
@@ -408,77 +404,33 @@ class HistoryManager {
    */
   async updateMetadata(videoId) {
     try {
-      // YouTube動画ページを開いてユーザーに情報を取得させる
-      const tabs = await chrome.tabs.query({ url: `*://www.youtube.com/watch?v=${videoId}*` });
+      // fetchでメタデータを取得（1回のリクエストで全て取得）
+      const { fetchVideoMetadata, serializeImage, updateDownloadHistory, notify } = await import('./common.js');
 
-      if (tabs.length > 0) {
-        // すでにタブが開いている場合
-        await chrome.tabs.update(tabs[0].id, { active: true });
-        await this.requestPageInfo(tabs[0].id, videoId);
-      } else {
-        // 新しいタブで開く
-        const tab = await chrome.tabs.create({
-          url: `https://www.youtube.com/watch?v=${videoId}`,
-          active: false
-        });
+      const metadata = await fetchVideoMetadata(videoId);
 
-        // ページが読み込まれるまで待つ
-        await new Promise(resolve => {
-          const listener = (tabId, changeInfo) => {
-            if (tabId === tab.id && changeInfo.status === 'complete') {
-              chrome.tabs.onUpdated.removeListener(listener);
-              resolve();
-            }
-          };
-          chrome.tabs.onUpdated.addListener(listener);
-        });
+      // 画像をシリアライズして保存
+      const thumbnail = await serializeImage(metadata.thumbnail);
+      const channelAvatar = await serializeImage(metadata.channelAvatar);
 
-        await this.requestPageInfo(tab.id, videoId);
-        await chrome.tabs.remove(tab.id);
-      }
+      const updatedData = {
+        thumbnail: thumbnail,
+        title: metadata.title,
+        channel_id: metadata.channelId,
+        channel_name: metadata.channelName,
+        channel_avatar: channelAvatar
+      };
+
+      await updateDownloadHistory(videoId, updatedData);
+      this.histories[videoId] = { ...this.histories[videoId], ...updatedData };
+
+      await this.render();
+      await notify('Metadata updated successfully');
     } catch (error) {
       console.error('Update metadata error:', error);
-      await notify('Failed to update metadata', 'Error');
+      const { notify } = await import('./common.js');
+      await notify('Failed to update metadata: ' + error.message, 'Error');
     }
-  }
-
-  /**
-   * ページ情報をリクエスト
-   */
-  async requestPageInfo(tabId, videoId) {
-    return new Promise((resolve, reject) => {
-      chrome.tabs.sendMessage(tabId, { action: 'getPageInfo' }, async (response) => {
-        if (!response) {
-          reject(new Error('Failed to get page info'));
-          return;
-        }
-
-        try {
-          // 画像を再取得してメタデータを更新
-          const { serializeImage } = await import('./common.js');
-          const thumbnail = await serializeImage(response.thumbnail);
-          const channelAvatar = await serializeImage(response.channelAvatar);
-
-          const updatedData = {
-            thumbnail: thumbnail,
-            title: response.title,
-            channel_name: response.channelName,
-            channel_avatar: channelAvatar
-          };
-
-          await updateDownloadHistory(videoId, updatedData);
-
-          // ローカルの履歴も更新
-          this.histories[videoId] = { ...this.histories[videoId], ...updatedData };
-
-          await this.render();
-          await notify('Metadata updated successfully');
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      });
-    });
   }
 
   /**

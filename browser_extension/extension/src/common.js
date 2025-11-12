@@ -282,3 +282,121 @@ export const notify = async (message, title = null) => {
     message: message,
   });
 };
+
+/**
+ * ytInitialPlayerResponseを抽出（プレイヤー情報）
+ * @param {string} html - YouTubeページのHTML
+ * @returns {Object|null} パース済みのJSONデータ、または null
+ */
+const extractYtInitialPlayerResponse = (html) => {
+  const patterns = [
+    /var ytInitialPlayerResponse = ({.+?});/s,
+    /window\["ytInitialPlayerResponse"\] = ({.+?});/s,
+    /ytInitialPlayerResponse = ({.+?});/s
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) {
+      try {
+        return JSON.parse(match[1]);
+      } catch (e) {
+        console.error('ytInitialPlayerResponse parse error:', e);
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * ytInitialDataを抽出（メインのページデータ）
+ * @param {string} html - YouTubeページのHTML
+ * @returns {Object|null} パース済みのJSONデータ、または null
+ */
+const extractYtInitialData = (html) => {
+  const patterns = [
+    /var ytInitialData = ({.+?});/s,
+    /window\["ytInitialData"\] = ({.+?});/s,
+    /ytInitialData = ({.+?});/s
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) {
+      try {
+        return JSON.parse(match[1]);
+      } catch (e) {
+        console.error('ytInitialData parse error:', e);
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * fetchで動画のメタデータを取得
+ * @param {string} videoId - YouTube動画ID
+ * @returns {Promise<Object>} { title, thumbnail, channelId, channelName, channelAvatar }
+ */
+export const fetchVideoMetadata = async (videoId) => {
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error: ${response.status}`);
+  }
+
+  const html = await response.text();
+
+  // ytInitialPlayerResponse JSONを抽出
+  const data = extractYtInitialPlayerResponse(html);
+  if (!data) {
+    throw new Error('ytInitialPlayerResponse not found');
+  }
+
+  // 基本情報を抽出
+  const title = data.videoDetails?.title || '';
+  const channelId = data.videoDetails?.channelId || '';
+  const channelName = data.microformat?.playerMicroformatRenderer?.ownerChannelName || '';
+
+  // サムネイル
+  const thumbnail = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+
+  // チャンネルアバターを抽出（ytInitialDataから取得）
+  const initialData = extractYtInitialData(html);
+  let channelAvatar = '';
+
+  if (initialData) {
+    try {
+      // videoSecondaryInfoRenderer から取得
+      const contents = initialData?.contents?.twoColumnWatchNextResults?.results?.results?.contents;
+      if (contents) {
+        for (const content of contents) {
+          if (content.videoSecondaryInfoRenderer) {
+            const thumbnails = content.videoSecondaryInfoRenderer
+              ?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails;
+
+            if (thumbnails && thumbnails.length > 0) {
+              // 一番画質が良いもの（配列の最後、または最大width）を取得
+              const bestThumbnail = thumbnails.reduce((prev, current) =>
+                (current.width > prev.width) ? current : prev
+              );
+              channelAvatar = bestThumbnail.url;
+            }
+            break;
+          }
+        }
+      }
+    } catch (parseError) {
+      console.error('Failed to extract channel avatar:', parseError.message);
+      // チャンネルアバターが取得できなくても続行
+    }
+  }
+
+  return { title, thumbnail, channelId, channelName, channelAvatar };
+};

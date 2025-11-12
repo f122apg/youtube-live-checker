@@ -331,6 +331,7 @@ main {
     gap: 16px;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
+    cursor: pointer;
 }
 
 .video-item:hover {
