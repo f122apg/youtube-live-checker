@@ -28,6 +28,8 @@ set /p ACCOUNT_NAME=[96mPlease input account:[0m
 set /p AWS_ACCESS_KEY_ID=[96mPlease input aws access key:[0m
 set /p AWS_SECRET_ACCESS_KEY=[96mPlease input secret access key:[0m
 set /p AWS_SNS_TOPIC=[96mPlease input aws sns topic:[0m
+set /p WASABI_BUCKET_NAME=[96mPlease input wasabi bucket:[0m
+set /p WASABI_LOCATION=[96mPlease input wasabi location:[0m
 
 rem deploying services
 call :init_project

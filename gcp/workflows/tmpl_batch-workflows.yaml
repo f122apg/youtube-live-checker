@@ -13,6 +13,9 @@ main:
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
           - cloudFunctionsUrl: @OVERRIDE_HERE@
+          - wasabiBucketName: @OVERRIDE_WASABI_BUCKET_NAME@
+          - wasabiLocation: @OVERRIDE_WASABI_LOCATION@
+          - wasabiS3Url: ${"s3." + wasabiLocation + ".wasabisys.com"}
     - recLiveJob:
         call: http.post
         args:
@@ -36,6 +39,12 @@ main:
                       variables:
                         CONTENT_ID: ${contentId}
                         OUTPUT_PATH: /mnt/share
+                        WASABI_S3_URL: ${"https://" + wasabiS3Url}
+                        WASABI_BUCKET_NAME: ${wasabiBucketName}
+                        AWS_DEFAULT_REGION: ${wasabiLocation}
+                      secretVariables:
+                        AWS_ACCESS_KEY_ID: ${"projects/" + projectId + "/secrets/wasabi_API_ID/versions/1"}
+                        AWS_SECRET_ACCESS_KEY:  ${"projects/" + projectId + "/secrets/wasabi_API_KEY/versions/1"}
                 volumes:
                   - gcs:
                       remotePath: ${bucketName}
