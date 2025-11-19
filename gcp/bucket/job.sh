@@ -32,16 +32,17 @@ EOF
 
 # install dependencies
 apt update
-apt install -y git curl xz-utils zip moreutils python3-pip
+apt install -y curl xz-utils zip moreutils
+#apt install -y git curl xz-utils zip moreutils python3-pip
 
-# install nodejs
-curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
-bash nodesource_setup.sh
-apt install -y nodejs
-node -v
+# # install nodejs
+# curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
+# bash nodesource_setup.sh
+# apt install -y nodejs
+# node -v
 
-# install yarn
-npm install -g yarn
+# # install yarn
+# npm install -g yarn
 
 # install ffmpeg ffprobe
 curl -LO https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
@@ -57,16 +58,16 @@ sudo ./aws/install
 curl -LO https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
 chmod +x yt-dlp
 
-# install po token generate tool
-cd ~
-git clone --single-branch --branch 0.7.4 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git
-cd bgutil-ytdlp-pot-provider/server/
-yarn install --frozen-lockfile
-npx tsc
+# # install po token generate tool
+# cd ~
+# git clone --single-branch --branch 0.7.4 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git
+# cd bgutil-ytdlp-pot-provider/server/
+# yarn install --frozen-lockfile
+# npx tsc
 
-python3 -m pip install -U bgutil-ytdlp-pot-provider
+# python3 -m pip install -U bgutil-ytdlp-pot-provider
 
-cd /
+# cd /
 
 # check container
 docker ps -a
