@@ -2,6 +2,12 @@
 
 mkdir -p ~/.config/yt-dlp
 cat <<EOF > ~/.config/yt-dlp/config
+# EJS Setup - Enable Deno runtime
+--js-runtimes deno
+
+# Remote components - Download EJS scripts from GitHub
+--remote-components ejs:github
+
 # Change language
 --add-header 'Accept-Language:ja-JP'
 --extractor-args "youtube:lang=ja;youtube:player-client=default,-ios"
@@ -35,6 +41,15 @@ apt update
 apt install -y curl xz-utils zip moreutils
 #apt install -y git curl xz-utils zip moreutils python3-pip
 
+# Install Deno (Recommended JS runtime for EJS)
+echo "Installing Deno..."
+curl -fsSL https://deno.land/install.sh | sh
+export DENO_INSTALL="$HOME/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+
+# Verify Deno installation
+deno --version
+
 # # install nodejs
 # curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
 # bash nodesource_setup.sh
@@ -55,7 +70,7 @@ unzip -q awscliv2.zip
 sudo ./aws/install
 
 # prepare yt-dlp
-curl -LO https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o "yt-dlp"
 chmod +x yt-dlp
 
 # # install po token generate tool
@@ -83,6 +98,12 @@ fi
 jq 'del(.formats, .automatic_captions)' /work/${CONTENT_ID}.info.json | sponge /work/${CONTENT_ID}.info.json
 
 cat <<EOF > ~/.config/yt-dlp/config
+# EJS Setup - Enable Deno runtime
+--js-runtimes deno
+
+# Remote components - Download EJS scripts from GitHub
+--remote-components ejs:github
+
 # Change language
 --add-header 'Accept-Language:ja-JP'
 --extractor-args "youtube:lang=ja"
