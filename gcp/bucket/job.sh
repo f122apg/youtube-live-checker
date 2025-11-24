@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /mnt/share/vpngate_lib.sh
+
 mkdir -p ~/.config/yt-dlp
 cat <<EOF > ~/.config/yt-dlp/config
 # EJS Setup - Enable Deno runtime
@@ -38,11 +40,12 @@ EOF
 
 # install dependencies
 apt update
-apt install -y curl xz-utils zip moreutils
+apt install -y curl xz-utils zip moreutils openvpn
 #apt install -y git curl xz-utils zip moreutils python3-pip
 
 # Install Deno (Recommended JS runtime for EJS)
 echo "Installing Deno..."
+
 curl -fsSL https://deno.land/install.sh | sh
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
@@ -80,6 +83,7 @@ chmod +x yt-dlp
 # yarn install --frozen-lockfile
 # npx tsc
 
+
 # python3 -m pip install -U bgutil-ytdlp-pot-provider
 
 # cd /
@@ -89,10 +93,16 @@ docker ps -a
 
 # live download
 mkdir /work
-./yt-dlp -v -4 ${CONTENT_ID}
 
-if [ $? -ne 0 ]; then
-    exit $?
+sleep 60
+
+vpn_connect
+
+./yt-dlp -v -4 ${CONTENT_ID}
+YTDLP_EXIT_CODE=$?
+
+if [ ${YTDLP_EXIT_CODE} -ne 0 ]; then
+    exit ${YTDLP_EXIT_CODE}
 fi
 
 jq 'del(.formats, .automatic_captions)' /work/${CONTENT_ID}.info.json | sponge /work/${CONTENT_ID}.info.json
@@ -145,6 +155,8 @@ if [ $? -eq 0 ] && [[ "$channel_url" == *"https://"* ]]; then
         channel_banner_url='null'
     fi
 fi
+
+vpn_disconnect
 
 echo 'Writing info.json...'
 jq --arg avatar_url $avatar_url '. + {"avatar_url": $avatar_url}' /work/${CONTENT_ID}.info.json | sponge /work/${CONTENT_ID}.info.json
