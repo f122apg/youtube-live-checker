@@ -400,3 +400,29 @@ export const fetchVideoMetadata = async (videoId) => {
 
   return { title, thumbnail, channelId, channelName, channelAvatar };
 };
+
+/**
+ * 動画をダウンロード（Native Message送信）
+ * @param {Object} data - ダウンロードに必要なデータ
+ * @param {string} data.videoThumbnailUrl - サムネイルURL
+ * @param {string} data.videoId - 動画ID
+ * @param {string} data.videoTitle - 動画タイトル
+ * @param {string} data.channelId - チャンネルID
+ * @param {string} data.channelName - チャンネル名
+ * @param {string} data.channelAvatar - チャンネルアバターURL
+ * @returns {Promise<void>}
+ */
+export const downloadVideo = async (data) => {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({
+      action: 'sendNativeMessage',
+      data: data
+    }, response => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+};

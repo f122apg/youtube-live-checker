@@ -9,7 +9,8 @@ import {
   deleteMultipleHistories,
   deserializeImage,
   getJstDate,
-  notify
+  notify,
+  downloadVideo
 } from './common.js';
 
 import {
@@ -258,6 +259,7 @@ class HistoryManager {
         <div class="video-card-date">${getJstDate(history.download_date)}</div>
         <div class="video-card-actions">
           <button class="btn-small btn-success" data-action="update" data-id="${history.id}">Update</button>
+          <button class="btn-small btn-primary" data-action="redownload" data-id="${history.id}">Re-download</button>
           <button class="btn-small btn-danger" data-action="delete" data-id="${history.id}">Delete</button>
         </div>
       </div>
@@ -294,6 +296,7 @@ class HistoryManager {
         </div>
         <div class="video-item-actions">
           <button class="btn-small btn-secondary" data-action="update" data-id="${history.id}">Update Metadata</button>
+          <button class="btn-small btn-primary" data-action="redownload" data-id="${history.id}">Re-download</button>
           <button class="btn-small btn-danger" data-action="delete" data-id="${history.id}">Delete</button>
         </div>
       </div>
@@ -361,6 +364,35 @@ class HistoryManager {
       e.stopPropagation();
       this.showDeleteDialog(history.id, history.title);
     });
+
+    // 再ダウンロード
+    element.querySelector('[data-action="redownload"]')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await this.redownload(history);
+    });
+  }
+
+  /**
+   * 動画を再ダウンロード
+   */
+  async redownload(history) {
+    try {
+      const thumbnail = await deserializeImage(history.thumbnail);
+      const channelAvatar = await deserializeImage(history.channel_avatar);
+
+      await downloadVideo({
+        videoThumbnailUrl: thumbnail,
+        videoId: history.id,
+        videoTitle: history.title,
+        channelId: history.channel_id,
+        channelName: history.channel_name,
+        channelAvatar: channelAvatar,
+      });
+      await notify('Download started: ' + history.title);
+    } catch (error) {
+      console.error('Redownload error:', error);
+      await notify('Failed to start download: ' + error.message, 'Error');
+    }
   }
 
   /**

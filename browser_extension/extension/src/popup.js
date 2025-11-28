@@ -1,7 +1,8 @@
 import {
   getDownloadHistories,
   deserializeImage,
-  getJstDate
+  getJstDate,
+  downloadVideo
 } from './common.js';
 
 import {
@@ -67,17 +68,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('downloadButton').setAttribute('disabled', 'true');
 
     // Background Scripts経由でネイティブアプリを起動してダウンロードを開始する
-    chrome.runtime.sendMessage({
-      action: 'sendNativeMessage',
-      data: {
+    try {
+      await downloadVideo({
         videoThumbnailUrl: thumbnailUrl,
         videoId: id,
         videoTitle: title,
         channelId: channelId,
         channelAvatar: channelAvatar,
         channelName: channelName,
-      }
-    }, response => { });
+      });
+    } catch (error) {
+      console.error('Download request failed:', error);
+    }
   });
 });
 
