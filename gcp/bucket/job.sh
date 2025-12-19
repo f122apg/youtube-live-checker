@@ -98,8 +98,83 @@ sleep 60
 
 vpn_connect
 
-./yt-dlp -v -4 ${CONTENT_ID}
-YTDLP_EXIT_CODE=$?
+# Bot判定エラー時にVPN再接続してリトライ（最大10回）
+MAX_RETRY=10
+LOG_FILE="/tmp/ytdlp_$$.log"
+CHECK_INTERVAL=60  # ログ監視間隔（秒）
+
+for i in $(seq 1 $MAX_RETRY); do
+    echo "=== Download attempt $i/$MAX_RETRY ==="
+
+    # ログファイルを初期化
+    > "$LOG_FILE"
+
+    # yt-dlpをバックグラウンドで実行、ログをファイルに追記
+    # 24時間でタイムアウト、60秒猶予後に強制終了
+    timeout -s SIGTERM -k 60 86400 ./yt-dlp -v -4 \
+        --socket-timeout 300 \
+        --retries 10 \
+        --fragment-retries 10 \
+        ${CONTENT_ID} >> "$LOG_FILE" 2>&1 &
+    YTDLP_PID=$!
+
+    # tail -f でリアルタイムにCloud Loggingへ出力
+    tail -f "$LOG_FILE" &
+    TAIL_PID=$!
+
+    # エラー検知フラグ
+    ERROR_DETECTED=0
+
+    # yt-dlpが動作中はログを監視
+    while kill -0 $YTDLP_PID 2>/dev/null; do
+        # スタックトレース、Bot判定メッセージ、既知のエラーメッセージを検知
+        if grep -qE 'File ".*\.py", line [0-9]+, in |not a bot|botではない|ERROR: unable to download video data|ERROR: Did not get any data blocks' "$LOG_FILE"; then
+            echo "Error detected in yt-dlp output. Killing process..."
+            kill $YTDLP_PID 2>/dev/null
+            wait $YTDLP_PID 2>/dev/null
+            ERROR_DETECTED=1
+            break
+        fi
+        sleep $CHECK_INTERVAL
+    done
+
+    # tail プロセスを終了
+    kill $TAIL_PID 2>/dev/null
+
+    # エラー検知されなかった場合は終了コードを取得
+    if [ $ERROR_DETECTED -eq 0 ]; then
+        wait $YTDLP_PID
+        YTDLP_EXIT_CODE=$?
+    else
+        YTDLP_EXIT_CODE=1
+    fi
+
+    # 成功したら抜ける
+    if [ ${YTDLP_EXIT_CODE} -eq 0 ]; then
+        break
+    fi
+
+    # タイムアウトの場合は即終了
+    if [ ${YTDLP_EXIT_CODE} -eq 124 ]; then
+        echo "ERROR: yt-dlp timed out after 24 hours"
+        rm -f "$LOG_FILE"
+        exit 124
+    fi
+
+    # 最後の試行でなければVPN再接続してリトライ
+    if [ $i -lt $MAX_RETRY ]; then
+        echo "Download failed (exit code: $YTDLP_EXIT_CODE, error_detected: $ERROR_DETECTED). Reconnecting VPN and retrying..."
+        vpn_disconnect
+        sleep 10
+        vpn_connect
+    fi
+done
+
+# ダウンロード完了
+echo "[SUCCESS] yt-dlp download completed successfully (attempt $i/$MAX_RETRY)"
+
+# ログファイルを削除
+rm -f "$LOG_FILE"
 
 if [ ${YTDLP_EXIT_CODE} -ne 0 ]; then
     exit ${YTDLP_EXIT_CODE}
