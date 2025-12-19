@@ -434,7 +434,7 @@ vpn_connect() {
             if ($13 ~ /Academic Use Only/) next
             if (length($15) < 100) next
             print $3, $2, $6, $15, $13
-        }' "$VPN_WORK_DIR/vpngate_clean.csv" | sort -t'|' -k1 -nr | head -n 15
+        }' "$VPN_WORK_DIR/vpngate_clean.csv" | sort -t'|' -k1 -nr | head -n 15 | shuf
     }
 
     ALL_CANDIDATE_SERVERS=""
