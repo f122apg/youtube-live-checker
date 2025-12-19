@@ -8,68 +8,279 @@ main:
           - batchRegion: "us-west1"
           - batchInstanceType: "STANDARD"
           - batchMachineType: "e2-micro"
-          - batchJobId: ${"job-live-download-" + string(int(sys.now()))}
           - batchApiUrl: ${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/" + batchRegion + "/jobs"}
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
           - cloudFunctionsUrl: @OVERRIDE_HERE@
           - wasabiBucketName: @OVERRIDE_WASABI_BUCKET_NAME@
-          - wasabiLocation: @OVERRIDE_WASABI_LOCATION@
+          - wasabiDefaultLocation: @PLEASE_REPLACE_WASABI_LOCATION@
           - wasabiS3Url: ${"s3." + wasabiLocation + ".wasabisys.com"}
-    - recLiveJob:
-        call: http.post
-        args:
-          url: ${batchApiUrl}
-          query:
-            job_id: ${batchJobId}
-          headers:
-            Content-Type: application/json
-          auth:
-            type: OAuth2
-          body:
-            taskGroups:
-              taskSpec:
-                computeResource:
-                  cpuMilli: 500
-                  memoryMib: 512
-                runnables:
-                  - script:
-                      text: bash /mnt/share/job.sh
-                    environment:
-                      variables:
-                        CONTENT_ID: ${contentId}
-                        OUTPUT_PATH: /mnt/share
-                        WASABI_S3_URL: ${"https://" + wasabiS3Url}
-                        WASABI_BUCKET_NAME: ${wasabiBucketName}
-                        AWS_DEFAULT_REGION: ${wasabiLocation}
-                      secretVariables:
-                        AWS_ACCESS_KEY_ID: ${"projects/" + projectId + "/secrets/wasabi_API_ID/versions/1"}
-                        AWS_SECRET_ACCESS_KEY:  ${"projects/" + projectId + "/secrets/wasabi_API_KEY/versions/1"}
-                volumes:
-                  - gcs:
-                      remotePath: ${bucketName}
-                    mountPath: /mnt/share
-              taskCount: 1
-              parallelism: 1
-            logsPolicy:
-              destination: CLOUD_LOGGING
-            allocationPolicy:
-              location:
-                allowedLocations:
-                  - ${"regions/" + batchRegion}
-              instances:
-                policy:
-                  provisioningModel: ${batchInstanceType}
-                  machineType: ${batchMachineType}
-                  bootDisk:
-                    type: pd-standard
-    - sendMail:
+          # Polling
+          - pollingIntervalSeconds: 300
+          - progressNotifyIntervalSeconds: 1800
+          - maxExecutionSeconds: 43200
+          # Retry
+          - maxRetries: 5
+          - retryCount: 0
+          # Status Variables
+          - batchJobId: ""
+          - startTime: ${sys.now()}
+          - lastProgressNotifyTime: ${sys.now()}
+
+    # ===== Begin Notification =====
+    - sendStartNotification:
         call: http.get
         args:
           url: ${cloudFunctionsUrl}
           query:
-            notify: true
+            notify: "true"
+            type: "start"
             title: ${contentTitle}
             contentId: ${contentId}
           auth:
             type: OIDC
+
+    # ===== Retry Loop =====
+    - retryLoop:
+        assign:
+          - batchJobId: ${"job-live-download-" + string(int(sys.now()))}
+
+    # ===== Create Batch Job =====
+    - createBatchJob:
+        try:
+          call: http.post
+          args:
+            url: ${batchApiUrl}
+            query:
+              job_id: ${batchJobId}
+            headers:
+              Content-Type: application/json
+            auth:
+              type: OAuth2
+            body:
+              taskGroups:
+                taskSpec:
+                  computeResource:
+                    cpuMilli: 500
+                    memoryMib: 512
+                  runnables:
+                    script:
+                      text: bash /mnt/share/job.sh
+                    environment:
+                        variables:
+                          CONTENT_ID: ${contentId}
+                          OUTPUT_PATH: /mnt/share
+                          WASABI_S3_URL: ${"https://" + wasabiS3Url}
+                          WASABI_BUCKET_NAME: ${wasabiBucketName}
+                          AWS_DEFAULT_REGION: ${wasabiDefaultLocation}
+                        secretVariables:
+                          AWS_ACCESS_KEY_ID: ${"projects/" + projectId + "/secrets/wasabi_API_ID/versions/1"}
+                          AWS_SECRET_ACCESS_KEY: ${"projects/" + projectId + "/secrets/wasabi_API_KEY/versions/1"}
+                  volumes:
+                    - gcs:
+                        remotePath: ${bucketName}
+                      mountPath: /mnt/share
+                taskCount: 1
+                parallelism: 1
+              logsPolicy:
+                destination: CLOUD_LOGGING
+              allocationPolicy:
+                location:
+                  allowedLocations:
+                    - ${"regions/" + batchRegion}
+                network:
+                  networkInterfaces:
+                    - network: ${"projects/" + projectId + "/global/networks/default"}
+                      subnetwork: ${"projects/" + projectId + "/regions/" + batchRegion + "/subnetworks/default"}
+                      noExternalIpAddress: true
+                instances:
+                  policy:
+                    provisioningModel: ${batchInstanceType}
+                    machineType: ${batchMachineType}
+                    bootDisk:
+                      type: pd-standard
+                      image: projects/debian-cloud/global/images/family/debian-12
+                serviceAccount:
+                  email: @PLEASE_REPLACE_SERVICE_ACCOUNT@
+          result: createJobResponse
+        except:
+          as: e
+          steps:
+            - handleCreateError:
+                assign:
+                  - errorMessage: ${e.message}
+            - checkRetryOnCreateError:
+                switch:
+                  - condition: ${retryCount < maxRetries}
+                    steps:
+                      - incrementRetryOnCreate:
+                          assign:
+                            - retryCount: ${retryCount + 1}
+                      - sleepBeforeRetryCreate:
+                          call: sys.sleep
+                          args:
+                            seconds: 60
+                      - gotoRetryLoopOnCreate:
+                          next: retryLoop
+            - sendCreateFailureNotification:
+                call: http.get
+                args:
+                  url: ${cloudFunctionsUrl}
+                  query:
+                    notify: "true"
+                    type: "failure"
+                    title: ${contentTitle}
+                    contentId: ${contentId}
+                    jobId: ${batchJobId}
+                    retryCount: ${string(retryCount)}
+                    errorMessage: ${errorMessage}
+                  auth:
+                    type: OIDC
+            - failOnCreateError:
+                raise: ${e}
+
+    # ===== Polling Loop =====
+    - pollingLoop:
+        steps:
+          - getJobStatus:
+              call: http.get
+              args:
+                url: ${batchApiUrl + "/" + batchJobId}
+                auth:
+                  type: OAuth2
+              result: jobStatusResponse
+
+          - extractStatus:
+              assign:
+                - jobState: ${jobStatusResponse.body.status.state}
+                - currentTime: ${sys.now()}
+                - elapsedSeconds: ${currentTime - startTime}
+                - elapsedHours: ${int(elapsedSeconds / 3600)}
+                - elapsedMinutes: ${int(elapsedSeconds / 60)}
+                - timeSinceLastProgress: ${currentTime - lastProgressNotifyTime}
+
+          # ===== Evaluate Job Status =====
+          - evaluateJobState:
+              switch:
+                # Success
+                - condition: ${jobState == "SUCCEEDED"}
+                  next: sendSuccessNotification
+                # Failed
+                - condition: ${jobState == "FAILED"}
+                  next: handleJobFailure
+                # Timeout
+                - condition: ${elapsedSeconds > maxExecutionSeconds}
+                  next: handleTimeout
+                # Progress（Every 30 minutes）
+                - condition: ${timeSinceLastProgress > progressNotifyIntervalSeconds}
+                  next: sendProgressNotification
+              # Default: Polling
+              next: sleepAndContinue
+
+    # ===== Success Notification =====
+    - sendSuccessNotification:
+        call: http.get
+        args:
+          url: ${cloudFunctionsUrl}
+          query:
+            notify: "true"
+            type: "success"
+            title: ${contentTitle}
+            contentId: ${contentId}
+            jobId: ${batchJobId}
+          auth:
+            type: OIDC
+        next: end
+
+    # ===== Failed job handler =====
+    - handleJobFailure:
+        steps:
+          - checkRetryOnFailure:
+              switch:
+                - condition: ${retryCount < maxRetries}
+                  steps:
+                    - incrementRetryOnFailure:
+                        assign:
+                          - retryCount: ${retryCount + 1}
+                    - sendRetryNotification:
+                        call: http.get
+                        args:
+                          url: ${cloudFunctionsUrl}
+                          query:
+                            notify: "true"
+                            type: "retry"
+                            title: ${contentTitle}
+                            contentId: ${contentId}
+                            jobId: ${batchJobId}
+                            retryCount: ${string(retryCount)}
+                            maxRetries: ${string(maxRetries)}
+                          auth:
+                            type: OIDC
+                    - sleepBeforeJobRetry:
+                        call: sys.sleep
+                        args:
+                          seconds: 60
+                    - gotoRetryLoop:
+                        next: retryLoop
+          - sendFailureNotification:
+              call: http.get
+              args:
+                url: ${cloudFunctionsUrl}
+                query:
+                  notify: "true"
+                  type: "failure"
+                  title: ${contentTitle}
+                  contentId: ${contentId}
+                  jobId: ${batchJobId}
+                  retryCount: ${string(retryCount)}
+                auth:
+                  type: OIDC
+              next: end
+
+    # ===== Timeout handler =====
+    - handleTimeout:
+        call: http.get
+        args:
+          url: ${cloudFunctionsUrl}
+          query:
+            notify: "true"
+            type: "timeout"
+            title: ${contentTitle}
+            contentId: ${contentId}
+            jobId: ${batchJobId}
+            elapsedHours: ${string(elapsedHours)}
+          auth:
+            type: OIDC
+        next: end
+
+    # ===== Progress Notification =====
+    - sendProgressNotification:
+        steps:
+          - notifyProgress:
+              call: http.get
+              args:
+                url: ${cloudFunctionsUrl}
+                query:
+                  notify: "true"
+                  type: "progress"
+                  title: ${contentTitle}
+                  contentId: ${contentId}
+                  jobId: ${batchJobId}
+                  elapsedHours: ${string(elapsedHours)}
+                auth:
+                  type: OIDC
+          - updateLastProgressTime:
+              assign:
+                - lastProgressNotifyTime: ${currentTime}
+          - continueAfterProgress:
+              next: sleepAndContinue
+
+    # ===== Polling and Waiting =====
+    - sleepAndContinue:
+        steps:
+          - sleep:
+              call: sys.sleep
+              args:
+                seconds: ${pollingIntervalSeconds}
+          - continuePolling:
+              next: pollingLoop
