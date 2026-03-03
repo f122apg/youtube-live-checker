@@ -1,4 +1,5 @@
 /vendor/
+.claude/
 
 gcp/**/*.csv
 gcp/**/*.yaml
