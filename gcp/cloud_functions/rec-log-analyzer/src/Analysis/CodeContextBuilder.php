@@ -10,23 +10,13 @@ class CodeContextBuilder
     private const MAX_LINES_PER_SNIPPET = 30;
     private const WINDOW_RADIUS = 6;
 
-    private const FILE_ALLOWLIST = [
-        'index.php',
-        'src/Analysis/LogAnalyzer.php',
-        'src/GCP/CloudLogging.php',
-        'src/AI/Gemini.php',
-        'src/Notion/Client.php',
-        '../../workflows/tmpl_batch-workflows.yaml',
-        '../../bucket/job.sh',
-        '../../bucket/vpngate_lib.sh',
-    ];
+    private const GCS_OBJECTS = ['job.sh', 'vpngate_lib.sh'];
 
-    private string $componentRoot;
+    private ?string $projectId;
 
-    public function __construct(?string $componentRoot = null)
+    public function __construct(?string $projectId = null)
     {
-        // src/Analysis -> src -> rec-log-analyzer
-        $this->componentRoot = $componentRoot ?? dirname(__DIR__, 2);
+        $this->projectId = $projectId;
     }
 
     public function build(AnalysisType $type, string $logText): array
@@ -34,32 +24,43 @@ class CodeContextBuilder
         $keywords = $this->extractKeywords($type, $logText);
         $snippets = [];
 
-        foreach (self::FILE_ALLOWLIST as $relativePath) {
-            $absolutePath = realpath($this->componentRoot . DIRECTORY_SEPARATOR . $relativePath);
-            if ($absolutePath === false || !is_file($absolutePath)) {
+        $accessToken = $this->getAccessToken();
+        if ($accessToken === null) {
+            Log::warning('Could not get access token, skipping remote code context');
+            return [
+                'keywords' => $keywords,
+                'snippetCount' => 0,
+                'snippets' => [],
+            ];
+        }
+
+        // GCSからシェルスクリプトを取得
+        foreach (self::GCS_OBJECTS as $objectPath) {
+            $content = $this->fetchFromGcs($objectPath, $accessToken);
+            if ($content === null || $content === '') {
                 continue;
             }
 
-            $content = @file_get_contents($absolutePath);
-            if ($content === false || $content === '') {
-                continue;
-            }
-
-            $fileSnippets = $this->buildFileSnippets(
-                $content,
-                $relativePath,
-                $keywords
-            );
-
+            $fileSnippets = $this->buildFileSnippets($content, $objectPath, $keywords);
             foreach ($fileSnippets as $snippet) {
                 $snippets[] = $snippet;
                 if (count($snippets) >= self::MAX_SNIPPETS) {
                     break 2;
                 }
             }
+        }
 
-            if (count($snippets) >= self::MAX_SNIPPETS) {
-                break;
+        // Workflows APIからワークフロー定義を取得
+        if (count($snippets) < self::MAX_SNIPPETS) {
+            $workflow = $this->fetchWorkflowDefinition($accessToken);
+            if ($workflow !== null) {
+                $fileSnippets = $this->buildFileSnippets($workflow['content'], $workflow['displayPath'], $keywords);
+                foreach ($fileSnippets as $snippet) {
+                    $snippets[] = $snippet;
+                    if (count($snippets) >= self::MAX_SNIPPETS) {
+                        break;
+                    }
+                }
             }
         }
 
@@ -84,9 +85,6 @@ class CodeContextBuilder
             'timeout',
             'retry',
             'batch',
-            'notion',
-            'gemini',
-            'cloud logging',
             'yt-dlp',
             'mount',
             'network',
@@ -200,6 +198,114 @@ class CodeContextBuilder
         }
 
         return array_slice($merged, 0, self::MAX_WINDOWS);
+    }
+
+    private function getAccessToken(): ?string
+    {
+        $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
+        $ch = curl_init($metadataUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_HTTPHEADER => ['Metadata-Flavor: Google'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 5,
+        ]);
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false) {
+            Log::warning('Failed to get access token from metadata server: ' . $error);
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        if (!isset($data['access_token'])) {
+            Log::warning('No access_token in metadata server response');
+            return null;
+        }
+
+        return $data['access_token'];
+    }
+
+    private function fetchFromGcs(string $objectPath, string $accessToken): ?string
+    {
+        $bucket = getenv('GCS_BUCKET_NAME') ?: null;
+        if ($bucket === null) {
+            Log::warning('GCS_BUCKET_NAME not set, skipping: ' . $objectPath);
+            return null;
+        }
+
+        $url = sprintf(
+            'https://storage.googleapis.com/storage/v1/b/%s/o/%s?alt=media',
+            rawurlencode($bucket),
+            rawurlencode($objectPath)
+        );
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $accessToken],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false || $httpCode !== 200) {
+            Log::warning(sprintf('GCS fetch failed for %s: HTTP %d %s', $objectPath, $httpCode, $error));
+            return null;
+        }
+
+        return $response;
+    }
+
+    private function fetchWorkflowDefinition(string $accessToken): ?array
+    {
+        $workflowName = getenv('WORKFLOW_NAME') ?: null;
+        $workflowRegion = getenv('WORKFLOW_REGION') ?: null;
+
+        if ($workflowName === null || $workflowRegion === null || $this->projectId === null) {
+            Log::warning('Workflow env vars or projectId missing, skipping workflow fetch');
+            return null;
+        }
+
+        $url = sprintf(
+            'https://workflows.googleapis.com/v1/projects/%s/locations/%s/workflows/%s',
+            rawurlencode($this->projectId),
+            rawurlencode($workflowRegion),
+            rawurlencode($workflowName)
+        );
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $accessToken],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false || $httpCode !== 200) {
+            Log::warning(sprintf('Workflows API fetch failed: HTTP %d %s', $httpCode, $error));
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        $content = $data['sourceContents'] ?? null;
+        if ($content === null || $content === '') {
+            return null;
+        }
+
+        return [
+            'displayPath' => $workflowName . '.yaml',
+            'content' => $content,
+        ];
     }
 
     private function maskSecrets(string $text): string

@@ -36,7 +36,7 @@ class LogAnalyzer
         $llmLogText = $logBundle['llmLogText'] ?? '';
 
         Log::info('Building code context...');
-        $codeContextBuilder = new CodeContextBuilder();
+        $codeContextBuilder = new CodeContextBuilder($this->projectId);
         $codeContext = $codeContextBuilder->build($this->type, $llmLogText);
 
         if (trim($llmLogText) === '') {
