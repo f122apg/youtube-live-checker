@@ -115,7 +115,7 @@ for i in $(seq 1 $MAX_RETRY); do
         --socket-timeout 300 \
         --retries 10 \
         --fragment-retries 10 \
-        ${CONTENT_ID} >> "$LOG_FILE" 2>&1 &
+        -- ${CONTENT_ID} >> "$LOG_FILE" 2>&1 &
     YTDLP_PID=$!
 
     # tail -f でリアルタイムにCloud Loggingへ出力
@@ -204,9 +204,9 @@ avatar_image_ext='null'
 channel_banner_url='null'
 channel_banner_image_ext='null'
 
-channel_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q" -q ${CONTENT_ID}`
+channel_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q" -q -- ${CONTENT_ID}`
 if [ $? -eq 0 ] && [[ "$channel_url" == *"https://"* ]]; then
-    avatar_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q | xargs ../yt-dlp -I0 -O \"playlist:%%(thumbnails.-1.url)s\"" -q ${CONTENT_ID}`
+    avatar_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q | xargs ../yt-dlp -I0 -O \"playlist:%%(thumbnails.-1.url)s\"" -q -- ${CONTENT_ID}`
     if [ $? -eq 0 ] && [[ "$avatar_url" == *"https://"* ]]; then
         echo "Found avatar url: $avatar_url"
         echo 'Downloading avatar image.'
@@ -218,7 +218,7 @@ if [ $? -eq 0 ] && [[ "$channel_url" == *"https://"* ]]; then
         avatar_url='null'
     fi
 
-    channel_banner_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q | xargs ../yt-dlp -I0 -O \"playlist:%%(thumbnails.-3.url)s\"" -q ${CONTENT_ID}`
+    channel_banner_url=`./yt-dlp --skip-download --exec "pre_process:python3 -c 'import urllib.parse; import sys; print(\"https://\" + urllib.parse.quote(sys.argv[1].replace(\"https://\", \"\")))' %(uploader_url)q | xargs ../yt-dlp -I0 -O \"playlist:%%(thumbnails.-3.url)s\"" -q -- ${CONTENT_ID}`
     if [ $? -eq 0 ] && [[ "$channel_banner_url" == *"https://"* ]]; then
         echo "Found channel banner url: $channel_banner_url"
         echo 'Downloading channel banner.'
@@ -240,8 +240,6 @@ jq --arg channel_banner_url $channel_banner_url '. + {"channel_banner_url": $cha
 jq --arg channel_banner_image_ext $channel_banner_image_ext '. + {"channel_banner_image_ext": $channel_banner_image_ext}' /work/${CONTENT_ID}.info.json | sponge /work/${CONTENT_ID}.info.json
 
 echo 'Uploading s3...'
-# make directory
-aws s3api put-object --endpoint-url ${WASABI_S3_URL} --bucket ${WASABI_BUCKET_NAME} --key ${CONTENT_ID}/
 
 # upload to s3
 aws s3 cp --endpoint-url ${WASABI_S3_URL} /work s3://${WASABI_BUCKET_NAME}/${CONTENT_ID}/ --recursive
