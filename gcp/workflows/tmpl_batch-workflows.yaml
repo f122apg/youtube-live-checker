@@ -239,19 +239,36 @@ main:
 
     # ===== Timeout handler =====
     - handleTimeout:
-        call: http.get
-        args:
-          url: ${cloudFunctionsUrl}
-          query:
-            notify: "true"
-            type: "timeout"
-            title: ${contentTitle}
-            contentId: ${contentId}
-            jobId: ${batchJobId}
-            elapsedHours: ${string(elapsedHours)}
-          auth:
-            type: OIDC
-        next: end
+        steps:
+          - stopBatchJobOnTimeout:
+              try:
+                call: http.delete
+                args:
+                  url: ${batchApiUrl + "/" + batchJobId}
+                  auth:
+                    type: OAuth2
+                result: deleteJobResponse
+              except:
+                as: e
+                steps:
+                  - logTimeoutDeleteError:
+                      call: sys.log
+                      args:
+                        text: '${"Failed to delete Batch job " + batchJobId + " on timeout: " + e.message}'
+          - sendTimeoutNotification:
+              call: http.get
+              args:
+                url: ${cloudFunctionsUrl}
+                query:
+                  notify: "true"
+                  type: "timeout"
+                  title: ${contentTitle}
+                  contentId: ${contentId}
+                  jobId: ${batchJobId}
+                  elapsedHours: ${string(elapsedHours)}
+                auth:
+                  type: OIDC
+              next: end
 
     # ===== Progress Notification =====
     - sendProgressNotification:
