@@ -1,0 +1,11 @@
+{
+    "autoload": {
+        "psr-4": {
+            "F122apg\\YoutubeLiveChecker\\": "src/"
+        }
+    },
+    "require": {
+        "google/cloud-functions-framework": "^1.1",
+        "guzzlehttp/psr7": "^2.0"
+    }
+}
