@@ -100,8 +100,8 @@ class Sns {
 
         // タイプに応じたプレフィックスとサフィックスを決定
         [$typePrefix, $suffix] = match($type) {
-            NotificationType::START => ["", " の録画を開始しました"],
-            NotificationType::SUCCESS => ["", " の録画が完了しました"],
+            NotificationType::START => ["[開始]", " の録画を開始しました"],
+            NotificationType::SUCCESS => ["[完了]", " の録画が完了しました"],
             NotificationType::FAILURE => [" [失敗]", " の録画が失敗しました"],
             NotificationType::TIMEOUT => [" [タイムアウト]", " の録画がタイムアウトしました"],
             NotificationType::PROGRESS => [" [進行中]", " はまだ録画中です"],
