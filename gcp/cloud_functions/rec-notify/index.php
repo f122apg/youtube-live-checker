@@ -22,12 +22,16 @@ function main(ServerRequestInterface $request): ResponseInterface
         $type = NotificationType::tryFrom($typeString) ?? NotificationType::START;
 
         // メタデータを収集
+        // summary / analysisUrl は rec-log-analyzer の分析結果。
+        // 通知を見た時点で原因が分かるようにするため本文の先頭に出す
         $metadata = [
             'jobId' => $queries['jobId'] ?? null,
             'retryCount' => $queries['retryCount'] ?? null,
             'maxRetries' => $queries['maxRetries'] ?? null,
             'elapsedHours' => $queries['elapsedHours'] ?? null,
             'errorMessage' => $queries['errorMessage'] ?? null,
+            'summary' => $queries['summary'] ?? null,
+            'analysisUrl' => $queries['analysisUrl'] ?? null,
         ];
 
         $sns = new Sns(

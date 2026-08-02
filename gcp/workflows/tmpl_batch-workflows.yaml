@@ -13,6 +13,7 @@ main:
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
           - cloudFunctionsUrl: @OVERRIDE_HERE@
+          - logAnalyzerUrl: @OVERRIDE_LOG_ANALYZER_URL@
           - wasabiBucketName: @OVERRIDE_WASABI_BUCKET_NAME@
           - wasabiDefaultLocation: @PLEASE_REPLACE_WASABI_LOCATION@
           - wasabiS3Url: ${"s3." + wasabiLocation + ".wasabisys.com"}
@@ -25,6 +26,12 @@ main:
           - retryCount: 0
           # Status Variables
           - batchJobId: ""
+          # Cloud Logging の labels.job_uid はジョブ「名」ではなく「UID」。
+          # ジョブ作成レスポンスから拾って rec-log-analyzer へ渡す
+          - batchJobUid: ""
+          # rec-log-analyzer の分析結果。通知本文に載せる
+          - analysisSummary: ""
+          - analysisUrl: ""
           - startTime: ${sys.now()}
           - lastProgressNotifyTime: ${sys.now()}
 
@@ -144,6 +151,13 @@ main:
             - failOnCreateError:
                 raise: ${e}
 
+    # ===== Capture the Batch job UID =====
+    # ログ検索に使う labels.job_uid はジョブ名と別物なので、作成時のレスポンスから取得する。
+    # タイムアウト時はジョブを削除するため、あとから Batch API で引くことができない
+    - captureJobUid:
+        assign:
+          - batchJobUid: ${default(map.get(createJobResponse, ["body", "uid"]), "")}
+
     # ===== Polling Loop =====
     - pollingLoop:
         steps:
@@ -227,6 +241,39 @@ main:
                           seconds: 60
                     - gotoRetryLoop:
                         next: retryLoop
+          # 分析は通知より先に行い、結果を通知本文へ載せる。
+          # 失敗しても録画フロー本体を止めないよう except で握る
+          - analyzeFailure:
+              try:
+                steps:
+                  - callAnalyzerOnFailure:
+                      call: http.get
+                      args:
+                        url: ${logAnalyzerUrl}
+                        query:
+                          jobId: ${batchJobId}
+                          jobUid: ${batchJobUid}
+                          contentId: ${contentId}
+                          title: ${contentTitle}
+                          type: "failure"
+                          batchRegion: ${batchRegion}
+                          retryCount: ${string(retryCount)}
+                        auth:
+                          type: OIDC
+                        timeout: 300
+                      result: analysisResponse
+                  - extractFailureAnalysis:
+                      assign:
+                        - analysisSummary: ${default(map.get(analysisResponse, ["body", "summary"]), "")}
+                        - analysisUrl: ${default(map.get(analysisResponse, ["body", "notionUrl"]), "")}
+              except:
+                as: analyzeError
+                steps:
+                  - logAnalyzeFailureError:
+                      call: sys.log
+                      args:
+                        text: '${"Log analysis failed (failure): " + analyzeError.message}'
+                        severity: "WARNING"
           - sendFailureNotification:
               call: http.get
               args:
@@ -238,6 +285,8 @@ main:
                   contentId: ${contentId}
                   jobId: ${batchJobId}
                   retryCount: ${string(retryCount)}
+                  summary: ${analysisSummary}
+                  analysisUrl: ${analysisUrl}
                 auth:
                   type: OIDC
               next: end
@@ -260,6 +309,38 @@ main:
                       call: sys.log
                       args:
                         text: '${"Failed to delete Batch job " + batchJobId + " on timeout: " + e.message}'
+          # ジョブ削除後でも batchJobUid を保持しているためログ検索は可能
+          - analyzeTimeout:
+              try:
+                steps:
+                  - callAnalyzerOnTimeout:
+                      call: http.get
+                      args:
+                        url: ${logAnalyzerUrl}
+                        query:
+                          jobId: ${batchJobId}
+                          jobUid: ${batchJobUid}
+                          contentId: ${contentId}
+                          title: ${contentTitle}
+                          type: "timeout"
+                          batchRegion: ${batchRegion}
+                          elapsedHours: ${string(elapsedHours)}
+                        auth:
+                          type: OIDC
+                        timeout: 300
+                      result: analysisResponse
+                  - extractTimeoutAnalysis:
+                      assign:
+                        - analysisSummary: ${default(map.get(analysisResponse, ["body", "summary"]), "")}
+                        - analysisUrl: ${default(map.get(analysisResponse, ["body", "notionUrl"]), "")}
+              except:
+                as: analyzeError
+                steps:
+                  - logAnalyzeTimeoutError:
+                      call: sys.log
+                      args:
+                        text: '${"Log analysis failed (timeout): " + analyzeError.message}'
+                        severity: "WARNING"
           - sendTimeoutNotification:
               call: http.get
               args:
@@ -271,6 +352,8 @@ main:
                   contentId: ${contentId}
                   jobId: ${batchJobId}
                   elapsedHours: ${string(elapsedHours)}
+                  summary: ${analysisSummary}
+                  analysisUrl: ${analysisUrl}
                 auth:
                   type: OIDC
               next: end

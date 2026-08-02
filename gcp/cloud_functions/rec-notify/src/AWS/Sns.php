@@ -155,6 +155,29 @@ class Sns {
     }
 
     /**
+     * 分析結果のセクションを作成する
+     *
+     * rec-log-analyzer が返した推定原因とNotionへの導線を載せる。
+     * 通知を開いた時点で対応要否を判断できるようにするのが目的。
+     * 分析が取れなかった場合はログを自力で見るしかないので、その旨だけ書く。
+     */
+    private function _createAnalysisSection(array $metadata): string {
+        $summary = trim((string)($metadata['summary'] ?? ''));
+        if ($summary === '') {
+            return "\n詳細はCloud Loggingを確認してください。";
+        }
+
+        $section = "\n【推定原因】\n{$summary}";
+
+        $analysisUrl = trim((string)($metadata['analysisUrl'] ?? ''));
+        if ($analysisUrl !== '') {
+            $section .= "\n\n詳細な分析: {$analysisUrl}";
+        }
+
+        return $section;
+    }
+
+    /**
      * 失敗時のメッセージを作成する
      */
     private function _createFailureMessage(string $baseInfo, string $jobInfo, array $metadata): string {
@@ -168,7 +191,9 @@ class Sns {
             $errorInfo = "\nエラー詳細: {$metadata['errorMessage']}";
         }
 
-        return "{$baseInfo}{$jobInfo}{$retryInfo}{$errorInfo}\n\n録画が失敗しました。\n詳細はCloud Loggingを確認してください。";
+        $analysis = $this->_createAnalysisSection($metadata);
+
+        return "{$baseInfo}{$jobInfo}{$retryInfo}{$errorInfo}\n\n録画が失敗しました。\n{$analysis}";
     }
 
     /**
@@ -180,7 +205,9 @@ class Sns {
             $elapsedInfo = "\n経過時間: {$metadata['elapsedHours']}時間";
         }
 
-        return "{$baseInfo}{$jobInfo}{$elapsedInfo}\n\n録画が最大実行時間を超過しました。\nジョブがハングしている可能性があります。\n詳細はCloud Loggingを確認してください。";
+        $analysis = $this->_createAnalysisSection($metadata);
+
+        return "{$baseInfo}{$jobInfo}{$elapsedInfo}\n\n録画が最大実行時間を超過しました。\nジョブがハングしている可能性があります。\n{$analysis}";
     }
 
     /**
