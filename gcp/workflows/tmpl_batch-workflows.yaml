@@ -8,6 +8,7 @@ main:
           - batchRegion: "us-west1"
           - batchInstanceType: "STANDARD"
           - batchMachineType: "e2-micro"
+          - recorderImage: "docker.io/@PLEASE_REPLACE_DOCKERHUB_USER@/ytlc-recorder:latest"
           - batchApiUrl: ${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/" + batchRegion + "/jobs"}
           - contentTitle: ${args.title}
           - contentId: ${args.contentId}
@@ -70,6 +71,7 @@ main:
                         variables:
                           CONTENT_ID: ${contentId}
                           OUTPUT_PATH: /mnt/share
+                          RECORDER_IMAGE: ${recorderImage}
                           WASABI_S3_URL: ${"https://" + wasabiS3Url}
                           WASABI_BUCKET_NAME: ${wasabiBucketName}
                           AWS_DEFAULT_REGION: ${wasabiDefaultLocation}
@@ -88,18 +90,21 @@ main:
                 location:
                   allowedLocations:
                     - ${"regions/" + batchRegion}
+                tags:
+                  - ytlc-recorder
                 network:
                   networkInterfaces:
                     - network: ${"projects/" + projectId + "/global/networks/default"}
                       subnetwork: ${"projects/" + projectId + "/regions/" + batchRegion + "/subnetworks/default"}
-                      noExternalIpAddress: true
+                      noExternalIpAddress: false
                 instances:
                   policy:
                     provisioningModel: ${batchInstanceType}
                     machineType: ${batchMachineType}
                     bootDisk:
                       type: pd-standard
-                      image: projects/debian-cloud/global/images/family/debian-12
+                      image: projects/batch-custom-image/global/images/family/batch-debian-11-official
+                      sizeGb: 50
                 serviceAccount:
                   email: @PLEASE_REPLACE_SERVICE_ACCOUNT@
           result: createJobResponse

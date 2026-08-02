@@ -254,7 +254,7 @@ _fix_gcp_routing() {
 
         # 4. Routes for GCP services
         vpn_log_info "Adding routes for GCP services via $original_gw"
-        ip route add $GCP_METADATA_IP via $original_gw 2>/dev/nul34.126.0.0/18l || true
+        ip route add $GCP_METADATA_IP via $original_gw 2>/dev/null || true
         for range in 34.126.0.0/18 199.36.153.8/30 199.36.153.4/30 \
                      142.250.0.0/15 172.217.0.0/16 216.58.192.0/19; do
             ip route add $range via $original_gw 2>/dev/null || true
@@ -296,6 +296,15 @@ _fix_gcp_routing() {
         echo "nameserver 8.8.4.4" >> /etc/resolv.conf
         echo "fallback_dns_added" > "$VPN_WORK_DIR/dns_info"
     fi
+
+    # DNS固定（周期的なDNS解決失敗=Errno -9対策。OCI版_configure_container_routingと同方式）
+    # update-resolv-confやフォールバックが書いた内容を、接続成功後に固定DNSで上書きする
+    # （接続前のresolv.confはvpn_connect冒頭で/tmp/resolv.conf.pre-vpnにバックアップ済み）
+    vpn_log_info "Pinning DNS servers to 8.8.8.8 / 1.1.1.1 for stability..."
+    cat > /etc/resolv.conf << 'EOF'
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+EOF
 
     # Step 1: DNS設定（/etc/hosts）
     echo "Configuring DNS..."
@@ -398,6 +407,13 @@ vpn_connect() {
         vpn_log_info "Successfully detected SSH client IP: $ssh_client_ip. A route will be added to maintain the connection."
     fi
 
+    # resolv.confのバックアップ（VPNが一切触る前のクリーンな状態を一度だけ保存）
+    # VPN_WORK_DIR外の安定したパスに置き、再接続時に上書きされないようガードする
+    if [ -f /etc/resolv.conf ] && [ ! -f /tmp/resolv.conf.pre-vpn ]; then
+        vpn_log_info "Backing up pre-VPN /etc/resolv.conf to /tmp/resolv.conf.pre-vpn..."
+        cp /etc/resolv.conf /tmp/resolv.conf.pre-vpn 2>/dev/null || true
+    fi
+
     # Create working directory
     VPN_WORK_DIR="/tmp/vpngate_$$"
     mkdir -p "$VPN_WORK_DIR"
@@ -426,47 +442,58 @@ vpn_connect() {
     # Local function to find the best servers
     _find_best_servers() {
         local country_code=$1
-        awk -F',' -v country="$country_code" '
+        local min_bps="${VPN_MIN_ADVERTISED_BPS:-10000000}"
+        # ソートキーにSpeed($5)を先頭で出力し(降順ソート)、cutで剥がして
+        # 従来通り Score|IP|Country|OVPN_DATA|Operator の5フィールド形式を維持する
+        awk -F',' -v country="$country_code" -v min_bps="$min_bps" '
         BEGIN { OFS="|" }
         {
             if (NF < 15) next
             if ($7 != country) next
             if ($13 ~ /Academic Use Only/) next
             if (length($15) < 100) next
-            print $3, $2, $6, $15, $13
-        }' "$VPN_WORK_DIR/vpngate_clean.csv" | sort -t'|' -k1 -nr | head -n 15 | shuf
+            if ($5 < min_bps) next
+            print $5, $3, $2, $6, $15, $13
+        }' "$VPN_WORK_DIR/vpngate_clean.csv" | sort -t'|' -k1 -nr | head -n 15 | shuf | cut -d'|' -f2-
     }
 
     ALL_CANDIDATE_SERVERS=""
 
-    # vpn_log_info "Collecting servers from US (United States)..."
-    # US_SERVERS=$(_find_best_servers "US")
-    # if [ -n "$US_SERVERS" ]; then
-    #     ALL_CANDIDATE_SERVERS="$US_SERVERS"
-    # else
-    #     vpn_log_warn "No US servers found."
-    # fi
-
-    vpn_log_info "Collecting servers from JP (Japan)..."
-    JP_SERVERS=$(_find_best_servers "JP")
-    if [ -n "$JP_SERVERS" ]; then
-        if [ -n "$ALL_CANDIDATE_SERVERS" ]; then
-            ALL_CANDIDATE_SERVERS=$(printf "%s\n%s" "$ALL_CANDIDATE_SERVERS" "$JP_SERVERS")
+    # 国の優先順（先頭の国から順に候補リストを構築し、前の国の候補を使い切ったら次の国へ）
+    VPN_COUNTRIES="${VPN_COUNTRIES:-JP KR US}"
+    for country in $VPN_COUNTRIES; do
+        vpn_log_info "Collecting servers from $country..."
+        COUNTRY_SERVERS=$(_find_best_servers "$country")
+        if [ -n "$COUNTRY_SERVERS" ]; then
+            if [ -n "$ALL_CANDIDATE_SERVERS" ]; then
+                ALL_CANDIDATE_SERVERS=$(printf "%s\n%s" "$ALL_CANDIDATE_SERVERS" "$COUNTRY_SERVERS")
+            else
+                ALL_CANDIDATE_SERVERS="$COUNTRY_SERVERS"
+            fi
         else
-            ALL_CANDIDATE_SERVERS="$JP_SERVERS"
+            vpn_log_warn "No $country servers found."
         fi
-    else
-        vpn_log_warn "No JP servers found."
-    fi
+    done
 
     if [ -z "$ALL_CANDIDATE_SERVERS" ]; then
-        vpn_log_error "Could not find any suitable servers from US or JP."
+        vpn_log_error "Could not find any suitable servers from: $VPN_COUNTRIES."
         rm -rf "$VPN_WORK_DIR"
         return 1
     fi
 
     # Use process substitution instead of pipe to avoid subshell
     SERVER_INDEX=0
+    VPN_MIN_THROUGHPUT_KIBPS="${VPN_MIN_THROUGHPUT_KIBPS:-1024}"
+
+    # 全候補が実測スループットゲートで不合格だった場合のフォールバック用
+    # （最良だったサーバーの情報を保持しておき、最後に再接続して警告付きで続行する）
+    BEST_THROUGHPUT_KIBPS=-1
+    BEST_CANDIDATE_SCORE=""
+    BEST_CANDIDATE_IP=""
+    BEST_CANDIDATE_COUNTRY=""
+    BEST_CANDIDATE_OVPN_DATA=""
+    BEST_CANDIDATE_OPERATOR=""
+
     while IFS='|' read -r SCORE IP COUNTRY OVPN_DATA OPERATOR; do
         SERVER_INDEX=$((SERVER_INDEX + 1))
         vpn_log_info "------------------------------------------"
@@ -562,6 +589,39 @@ vpn_connect() {
                 sleep 2
                 _fix_gcp_routing "$IP" "$ssh_client_ip" "${gcp_ip_ranges[@]}"
 
+                # --- 接続後の実測スループットゲート ---
+                vpn_log_info "Measuring actual throughput (min required: ${VPN_MIN_THROUGHPUT_KIBPS} KiB/s)..."
+                MEASURED_BPS=$(curl -o /dev/null -s --max-time 15 -w '%{speed_download}' "https://speed.cloudflare.com/__down?bytes=20000000" 2>/dev/null)
+                if ! [[ "$MEASURED_BPS" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+                    MEASURED_BPS=0
+                fi
+                MEASURED_KIBPS=$(awk -v b="$MEASURED_BPS" 'BEGIN { printf "%d", b / 1024 }')
+                vpn_log_info "Measured throughput for $IP: ${MEASURED_KIBPS} KiB/s"
+
+                # このサーバーがこれまでで最良なら記録しておく（全滅時のフォールバック用）
+                if [ "$MEASURED_KIBPS" -gt "$BEST_THROUGHPUT_KIBPS" ]; then
+                    BEST_THROUGHPUT_KIBPS=$MEASURED_KIBPS
+                    BEST_CANDIDATE_SCORE="$SCORE"
+                    BEST_CANDIDATE_IP="$IP"
+                    BEST_CANDIDATE_COUNTRY="$COUNTRY"
+                    BEST_CANDIDATE_OVPN_DATA="$OVPN_DATA"
+                    BEST_CANDIDATE_OPERATOR="$OPERATOR"
+                fi
+
+                if [ "$MEASURED_KIBPS" -lt "$VPN_MIN_THROUGHPUT_KIBPS" ]; then
+                    vpn_log_warn "Throughput ${MEASURED_KIBPS} KiB/s is below threshold (${VPN_MIN_THROUGHPUT_KIBPS} KiB/s) for $IP. Disconnecting and trying next server."
+                    vpn_disconnect
+                    # vpn_disconnectがresolv.confをクリーンな状態に復元しバックアップを削除したため、
+                    # 次候補の接続（DNS固定）に備えて現在のクリーンな状態を再バックアップする
+                    if [ -f /etc/resolv.conf ] && [ ! -f /tmp/resolv.conf.pre-vpn ]; then
+                        cp /etc/resolv.conf /tmp/resolv.conf.pre-vpn 2>/dev/null || true
+                    fi
+                    # vpn_disconnectは$VPN_WORK_DIRを削除するため、後続候補の接続処理のために再作成する
+                    mkdir -p "$VPN_WORK_DIR"
+                    # ここはTIMEOUT待ちの内側whileの中なので、continue 2で候補ループ側を次に進める
+                    continue 2
+                fi
+
                 # Display external IP
                 EXTERNAL_IP=$(curl -s --max-time 10 https://api.ipify.org 2>/dev/null || echo "Failed to retrieve")
                 vpn_log_info "External IP: $EXTERNAL_IP"
@@ -591,6 +651,68 @@ vpn_connect() {
         fi
     done < <(echo "$ALL_CANDIDATE_SERVERS")
 
+    # 全候補が実測スループットゲート不合格だった場合、最良だったサーバーに
+    # 再接続して警告付きで続行する（録画自体は必ず実施するため接続を諦めない）
+    if [ -n "$BEST_CANDIDATE_IP" ]; then
+        vpn_log_warn "No server met the throughput threshold (${VPN_MIN_THROUGHPUT_KIBPS} KiB/s). Reconnecting to the best-measured server ($BEST_CANDIDATE_IP, ${BEST_THROUGHPUT_KIBPS} KiB/s, score=$BEST_CANDIDATE_SCORE) and continuing anyway."
+
+        if ! echo "$BEST_CANDIDATE_OVPN_DATA" | tr -d '\n\r ' | base64 -d > "$VPN_WORK_DIR/server.ovpn" 2>/dev/null; then
+            vpn_log_error "Failed to decode base64 OpenVPN data for fallback server $BEST_CANDIDATE_IP."
+            rm -rf "$VPN_WORK_DIR"
+            return 1
+        fi
+
+        echo "" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "# Cipher compatibility for VPN Gate (OpenVPN 2.6+ fix)" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "data-ciphers AES-128-CBC:AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "data-ciphers-fallback AES-128-CBC" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "# GCP Batch routing fix" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "route-nopull" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "script-security 2" >> "$VPN_WORK_DIR/server.ovpn"
+        echo "up-restart" >> "$VPN_WORK_DIR/server.ovpn"
+
+        vpn_log_info "Starting OpenVPN connection for fallback server $BEST_CANDIDATE_IP..."
+        openvpn --config "$VPN_WORK_DIR/server.ovpn" --daemon --log "$VPN_WORK_DIR/openvpn.log" \
+                --writepid "$VPN_WORK_DIR/openvpn.pid"
+
+        sleep 2
+        if [ -f "$VPN_WORK_DIR/openvpn.pid" ]; then
+            VPN_PID=$(cat "$VPN_WORK_DIR/openvpn.pid")
+        else
+            VPN_PID=""
+        fi
+
+        TIMEOUT=30
+        COUNTER=0
+        while [ $COUNTER -lt $TIMEOUT ]; do
+            if _check_tun0_exists; then
+                VPN_CONNECTED=1
+                vpn_log_warn "Reconnected to fallback server $BEST_CANDIDATE_IP (measured ${BEST_THROUGHPUT_KIBPS} KiB/s, below the ${VPN_MIN_THROUGHPUT_KIBPS} KiB/s threshold). Continuing recording anyway."
+
+                VPN_IP=$(_get_tun0_ip)
+                vpn_log_info "VPN Interface: tun0"
+                vpn_log_info "Assigned IP: $VPN_IP"
+
+                sleep 2
+                _fix_gcp_routing "$BEST_CANDIDATE_IP" "$ssh_client_ip" "${gcp_ip_ranges[@]}"
+
+                EXTERNAL_IP=$(curl -s --max-time 10 https://api.ipify.org 2>/dev/null || echo "Failed to retrieve")
+                vpn_log_info "External IP: $EXTERNAL_IP"
+
+                vpn_log_info "=========================================="
+                return 0
+            fi
+
+            sleep 1
+            COUNTER=$((COUNTER + 1))
+        done
+
+        vpn_log_error "Fallback reconnection to $BEST_CANDIDATE_IP also failed."
+        if [ -n "$VPN_PID" ] && kill -0 "$VPN_PID" 2>/dev/null; then
+            kill "$VPN_PID" 2>/dev/null || true
+        fi
+    fi
+
     vpn_log_error "Failed to connect to any of the top servers."
     rm -rf "$VPN_WORK_DIR"
     return 1
@@ -611,7 +733,12 @@ vpn_disconnect() {
     vpn_log_info "=========================================="
 
     # Restore DNS
-    if [ -f "$VPN_WORK_DIR/dns_info" ]; then
+    if [ -f /tmp/resolv.conf.pre-vpn ]; then
+        # VPNが一切触る前のクリーンな状態に復元する（復元後にバックアップを削除）
+        vpn_log_info "Restoring DNS settings from pre-VPN backup (/tmp/resolv.conf.pre-vpn)..."
+        cp /tmp/resolv.conf.pre-vpn /etc/resolv.conf 2>/dev/null || true
+        rm -f /tmp/resolv.conf.pre-vpn
+    elif [ -f "$VPN_WORK_DIR/dns_info" ]; then
         vpn_log_info "Restoring DNS settings (removing fallback Google DNS)..."
         sed -i '/nameserver 8.8.8.8/d' /etc/resolv.conf
         sed -i '/nameserver 8.8.4.4/d' /etc/resolv.conf
